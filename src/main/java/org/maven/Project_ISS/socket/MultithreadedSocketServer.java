@@ -24,6 +24,8 @@ public class MultithreadedSocketServer {
     }
 }*/
 
+import org.maven.Project_ISS.PGP.PrettyGoodPrivacy;
+
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -33,7 +35,10 @@ public class MultithreadedSocketServer {
     }
 
     private static void startServer() {
+
         try (ServerSocket server = new ServerSocket(8888)) {
+            PrettyGoodPrivacy.generateKeyPair("keys\\server\\priSVerVerate.txt",
+                    "keys\\server\\puSPerVerlic.txt");
             System.out.println("Server Started ....");
             // getting client request
             int counter = 0;

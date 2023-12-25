@@ -8,6 +8,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="Project_ISS" />
         <module name="ISS_Project-ISS_First" />
+        <module name="ISS_Project_new" />
       </profile>
     </annotationProcessing>
   </component>

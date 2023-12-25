@@ -1,5 +1,7 @@
 package org.maven.Project_ISS.socket;
+
 import org.maven.Project_ISS.AES.AsymmetricEncryption;
+import org.maven.Project_ISS.PGP.PrettyGoodPrivacy;
 import org.maven.Project_ISS.dao.*;
 import org.maven.Project_ISS.socket.AuthForms.LoginHandler;
 import org.maven.Project_ISS.socket.AuthForms.SignInHandler;
@@ -8,6 +10,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.security.PublicKey;
 
 public class ServerClientThread extends Thread {
     private final Socket serverClient;
@@ -25,8 +28,10 @@ public class ServerClientThread extends Thread {
             BufferedReader in = new BufferedReader(new InputStreamReader(serverClient.getInputStream()));
             PrintWriter out = new PrintWriter(serverClient.getOutputStream(), true);
 
+
             // Read client request
             String request = in.readLine();
+
             System.out.println("Request: " + request);
 
 
@@ -73,35 +78,42 @@ public class ServerClientThread extends Thread {
 
                 System.out.println("address: " + address);
 
-                String address_after_decrypt = AsymmetricEncryption.decrypt(address,key);
+                String address_after_decrypt = AsymmetricEncryption.decrypt(address, key);
                 String phone_number = in.readLine();
 
                 System.out.println("phone_number: " + phone_number);
-                int phone_number_after_decrypt = Integer.parseInt(AsymmetricEncryption.decrypt(phone_number,key));
+                int phone_number_after_decrypt = Integer.parseInt(AsymmetricEncryption.decrypt(phone_number, key));
                 String mobile_number = in.readLine();
 
                 System.out.println("mobile_number: " + mobile_number);
 
-                int mobile_number_after_decrypt = Integer.parseInt(AsymmetricEncryption.decrypt(mobile_number,key));
+                int mobile_number_after_decrypt = Integer.parseInt(AsymmetricEncryption.decrypt(mobile_number, key));
                 int id = studentDao.get_id(name);
-                if(id==0){
-                     id = professorDao.get_id(name);
-                    Professor professor = new Professor(id,name,password,address_after_decrypt,phone_number_after_decrypt,mobile_number_after_decrypt);
+                if (id == 0) {
+                    id = professorDao.get_id(name);
+                    Professor professor = new Professor(id, name, password, address_after_decrypt, phone_number_after_decrypt, mobile_number_after_decrypt);
                     professorDao.update(professor);
+                } else {
+                    Student student = new Student(id, name, password, address_after_decrypt, phone_number_after_decrypt, mobile_number_after_decrypt);
+                    studentDao.update(student);
                 }
-                else {
-                Student student = new Student(id,name,password,address_after_decrypt,phone_number_after_decrypt,mobile_number_after_decrypt);
-                studentDao.update(student);}
                 String message = "The information completion stage has been completed";
                 String message_after = AsymmetricEncryption.encrypt(message, key);
-                System.out.println("done information");
+                System.out.println("done information : " + message);
                 out.println(message_after);
-                out.flush();
-
+//                out.flush();
             }
+            // handshake
+            PublicKey clientPublicKey = performHandshake(in, out);
+            //recieve session key
+            String clientMessage = in.readLine();
+            String sessionkey = PrettyGoodPrivacy.decryptRSA(clientMessage, "keys\\server\\priSVerVerate.txt");
+            System.out.println("session key : " + sessionkey);
 
-
-
+            //send ok responce
+            String serverMessage = "The session key has been received";
+            serverMessage = AsymmetricEncryption.encrypt(serverMessage, sessionkey);
+            out.println(serverMessage);
 
 
 
@@ -116,6 +128,30 @@ public class ServerClientThread extends Thread {
         }
 
     }
+
+    private PublicKey performHandshake(BufferedReader in, PrintWriter out) throws Exception {
+        System.out.println(">> Handshake started ...");
+
+        // Create input and output streams for communication
+//        BufferedReader in = new BufferedReader(new InputStreamReader(serverClient.getInputStream()));
+//        PrintWriter out = new PrintWriter(serverClient.getOutputStream(), true);
+
+        // Receive the client's handshake message
+        String clientMessage = in.readLine();
+
+        System.out.println("Client public key: " + clientMessage);
+
+        System.out.println("===============================================================================");
+        PublicKey clientPublicKey = PrettyGoodPrivacy.convertStringToPublicKey(clientMessage);
+
+        PublicKey serverPublicKey = PrettyGoodPrivacy.readPublicKeyFromFile("keys\\server\\puSPerVerlic.txt");
+        String publicKeyToString = PrettyGoodPrivacy.convertPublicKeyToString(serverPublicKey);
+
+        out.println(publicKeyToString);
+
+        return clientPublicKey;
+    }
+
 }
 /*
 import org.maven.Project_ISS.dao.ProfessorDao;

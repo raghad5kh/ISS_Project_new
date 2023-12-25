@@ -7,8 +7,8 @@ CREATE TABLE students (
   password VARCHAR(8),
   address VARCHAR(30) DEFAULT  NULL,
   phone_number INT(15) DEFAULT  NULL,
-  mobile_number INT(15) DEFAULT  NULL
-
+  mobile_number INT(15) DEFAULT  NULL,
+  publicKey VARCHAR(30)
 
 );
 CREATE TABLE professor (
@@ -17,7 +17,9 @@ CREATE TABLE professor (
   password VARCHAR(8),
   address VARCHAR(30) DEFAULT NULL,
   phone_number INT(15) DEFAULT NULL,
-  mobile_number INT(15) DEFAULT NULL
+  mobile_number INT(15) DEFAULT NULL,
+  publicKey VARCHAR(30)
+
 
 );
 CREATE TABLE list_stus (

@@ -65,7 +65,6 @@ public class commonDetails {
     }
     public  void processCommonUserDetails_login(PrintWriter out, Scanner scanner,String clientIPAddress,int clientPortNumber) {
 
-
         String name;
         String password;
 

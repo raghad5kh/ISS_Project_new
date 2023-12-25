@@ -1,6 +1,7 @@
 package org.maven.Project_ISS.socket;
 
 import org.maven.Project_ISS.AES.AsymmetricEncryption;
+import org.maven.Project_ISS.PGP.PrettyGoodPrivacy;
 import org.maven.Project_ISS.dao.ProfessorDao;
 import org.maven.Project_ISS.dao.ProfessorDaoImpl;
 import org.maven.Project_ISS.dao.StudentDao;
@@ -12,6 +13,7 @@ import org.maven.Project_ISS.socket.ClientComponents.commonDetails;
 
 import java.io.*;
 import java.net.Socket;
+import java.security.PublicKey;
 import java.util.Scanner;
 
 
@@ -27,8 +29,6 @@ public class TCPClient {
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
         try {
-
-
             Socket socket = new Socket("127.0.0.1", 8888);
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -37,6 +37,7 @@ public class TCPClient {
 
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             String clientMessage = "";
+
 
             System.out.println("Enter your role in this SYSTEM!\n" +
                     "1. Professor\n" +
@@ -52,18 +53,18 @@ public class TCPClient {
             String compareString ="Your SignIn has been done successfully.";
 
             String serverMessage2 = in.readLine();
+            System.out.println("ggggggggggg"+serverMessage2);
             if (serverMessage2==null){
                 return ;
             }
+
             String[] parts = serverMessage2.split(",");
             int id_number= Integer.parseInt(parts[0]);
             String name= parts[1];
             String password = parts[2];
 
-
             if(serverMessage.substring(0, serverMessage.indexOf('.') + 1).equals(compareString.substring(0, compareString.indexOf('.') + 1))) {
                 processUserinfo(clientMessage, out, scanner,id_number,name,password);
-
             }
 
             String serverMessage3 = in.readLine();
@@ -76,7 +77,25 @@ public class TCPClient {
             String serverMessage3_after_decrypt = AsymmetricEncryption.decrypt(serverMessage3,key);
             System.out.println("Server response: " + serverMessage3_after_decrypt);
 
+            System.out.println("--start generate kesy --");
 
+            // generate pair key
+            String publicKeyPath = "keys\\client\\pu" +"id_number" + "PL" + "key" + "ic.txt";
+            String privateKeyPath = "keys\\client\\pri" +"id_number" + "V" + "key" + "ate.txt";
+            PrettyGoodPrivacy.generateKeyPair(privateKeyPath, publicKeyPath);
+            //handshake
+            PublicKey serverPublicKey = performHandshake(publicKeyPath,in,out);
+
+            // generate session key and send it
+            String sessionkey = AsymmetricEncryption.generateKey();
+            System.out.println("sessionkey : " +sessionkey);
+            AsymmetricEncryption.encrypt("alaaaajhgf",sessionkey);
+            String sessionkeyEncrypte =PrettyGoodPrivacy.encryptRSA(sessionkey,serverPublicKey);
+            out.println(sessionkeyEncrypte);
+
+            String okresponce=in.readLine();
+            String okresponceAfter=AsymmetricEncryption.decrypt(okresponce,sessionkey);
+            System.out.println("ok responce : "+okresponceAfter);
 
       /*      in.close();
             out.close();
@@ -124,6 +143,29 @@ public class TCPClient {
                 System.out.println("Unexpected answer!");
                 break;
         }
+    }
+
+
+    public static PublicKey performHandshake(String publicKeyPath,BufferedReader in,PrintWriter out) throws Exception {
+        System.out.println(">> Handshake started ...");
+        // Create input and output streams for communication
+//        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+//        PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+        PublicKey publicKey = PrettyGoodPrivacy.readPublicKeyFromFile(publicKeyPath);
+        // Send the client's public key to the server
+        String publicKeyToString = PrettyGoodPrivacy.convertPublicKeyToString(publicKey);
+        System.out.println("===============================================================================");
+        out.println(publicKeyToString);
+
+        // Receive the server's public key
+        String serverMessage = in.readLine();
+
+        PublicKey serverPublicKey = PrettyGoodPrivacy.convertStringToPublicKey(serverMessage);
+        System.out.println("Server's public key: " + serverMessage);
+
+//            PrettyGoodPrivacy.storePublicKeyToFile(serverPublicKey, "");
+        return serverPublicKey;
+
     }
 
    /* private static void processProfessor(PrintWriter out, Scanner scanner) {

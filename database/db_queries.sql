@@ -8,7 +8,7 @@ CREATE TABLE students (
   address VARCHAR(30) DEFAULT  NULL,
   phone_number INT(15) DEFAULT  NULL,
   mobile_number INT(15) DEFAULT  NULL,
-  publicKey VARCHAR(30)
+  publicKey VARCHAR(500)
 
 );
 CREATE TABLE professor (
@@ -18,7 +18,7 @@ CREATE TABLE professor (
   address VARCHAR(30) DEFAULT NULL,
   phone_number INT(15) DEFAULT NULL,
   mobile_number INT(15) DEFAULT NULL,
-  publicKey VARCHAR(30)
+  publicKey VARCHAR(500)
 
 
 );

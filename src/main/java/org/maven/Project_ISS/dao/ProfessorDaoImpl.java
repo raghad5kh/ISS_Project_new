@@ -5,20 +5,20 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class ProfessorDaoImpl implements ProfessorDao{
+public class ProfessorDaoImpl implements ProfessorDao {
     @Override
     public void save(Professor professor) {
         Connection con = DBConnection.getConnection();
-        if(con==null){
-            return ;
+        if (con == null) {
+            return;
         }
-        String query ="INSERT INTO professor(username,password,address,phone_number,mobile_number) VALUES (?,?,?,?,?);";
-        try (PreparedStatement preparedStatement = con.prepareStatement(query)){
-            preparedStatement.setString(1,professor.getUsername());
-            preparedStatement.setString(2,professor.getPassword());
-            preparedStatement.setString(3,professor.getAddress());
-            preparedStatement.setInt(4,professor.getPhone_number());
-            preparedStatement.setInt(5,professor.getMobile_number());
+        String query = "INSERT INTO professor(username,password,address,phone_number,mobile_number) VALUES (?,?,?,?,?);";
+        try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+            preparedStatement.setString(1, professor.getUsername());
+            preparedStatement.setString(2, professor.getPassword());
+            preparedStatement.setString(3, professor.getAddress());
+            preparedStatement.setInt(4, professor.getPhone_number());
+            preparedStatement.setInt(5, professor.getMobile_number());
             preparedStatement.executeUpdate();
 
         } catch (SQLException e) {
@@ -35,17 +35,17 @@ public class ProfessorDaoImpl implements ProfessorDao{
     @Override
     public void update(Professor professor) {
         Connection con = DBConnection.getConnection();
-        if(con==null){
-            return ;
+        if (con == null) {
+            return;
         }
-        String query ="UPDATE professor SET username=?,password=?,address=?,phone_number=?,mobile_number=? WHERE id=?;";
-        try (PreparedStatement preparedStatement = con.prepareStatement(query)){
-            preparedStatement.setString(1,professor.getUsername());
-            preparedStatement.setString(2,professor.getPassword());
-            preparedStatement.setString(3,professor.getAddress());
-            preparedStatement.setInt(4,professor.getPhone_number());
-            preparedStatement.setInt(5,professor.getMobile_number());
-            preparedStatement.setInt(6,professor.getId());
+        String query = "UPDATE professor SET username=?,password=?,address=?,phone_number=?,mobile_number=? WHERE id=?;";
+        try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+            preparedStatement.setString(1, professor.getUsername());
+            preparedStatement.setString(2, professor.getPassword());
+            preparedStatement.setString(3, professor.getAddress());
+            preparedStatement.setInt(4, professor.getPhone_number());
+            preparedStatement.setInt(5, professor.getMobile_number());
+            preparedStatement.setInt(6, professor.getId());
             preparedStatement.executeUpdate();
 
         } catch (SQLException e) {
@@ -62,15 +62,15 @@ public class ProfessorDaoImpl implements ProfessorDao{
     @Override
     public boolean exist(int id_number) {
         Connection con = DBConnection.getConnection();
-        if(con==null){
+        if (con == null) {
             return false;
         }
-        String query ="SELECT * FROM list_pros WHERE id_number= ?;";
-        try (PreparedStatement preparedStatement = con.prepareStatement(query)){
-            preparedStatement.setInt(1,id_number);
+        String query = "SELECT * FROM list_pros WHERE id_number= ?;";
+        try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+            preparedStatement.setInt(1, id_number);
 
             ResultSet resultSet = preparedStatement.executeQuery();
-            if(resultSet.next()){
+            if (resultSet.next()) {
                 return true;
             } else {
                 return false;
@@ -90,15 +90,15 @@ public class ProfessorDaoImpl implements ProfessorDao{
     @Override
     public boolean exist_account(String username, String password) {
         Connection con = DBConnection.getConnection();
-        if(con==null){
+        if (con == null) {
             return false;
         }
-        String query ="SELECT * FROM professor WHERE username= ? AND password=?;";
-        try (PreparedStatement preparedStatement = con.prepareStatement(query)){
-            preparedStatement.setString(1,username);
-            preparedStatement.setString(2,password);
+        String query = "SELECT * FROM professor WHERE username= ? AND password=?;";
+        try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+            preparedStatement.setString(1, username);
+            preparedStatement.setString(2, password);
             ResultSet resultSet = preparedStatement.executeQuery();
-            if(resultSet.next()){
+            if (resultSet.next()) {
                 return true;
             } else {
                 return false;
@@ -117,6 +117,34 @@ public class ProfessorDaoImpl implements ProfessorDao{
     }
 
     @Override
+    public void updatePublicKey(String username, String publicKey) {
+        Connection connection = DBConnection.getConnection();
+        if (connection == null) {
+            return;
+        }
+
+        // SQL query to update the row
+        String updateQuery = "UPDATE professor SET publicKey = ? WHERE username = ?";
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(updateQuery)) {
+            // Set parameters for the update query
+            preparedStatement.setString(1, publicKey);
+            preparedStatement.setString(2, username);
+
+            // Execute the update query
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println("Row updated successfully.");
+            } else {
+                System.out.println("No rows updated. User ID not found.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public String get_national_number(int id_number) {
         try (Connection con = DBConnection.getConnection()) {
             if (con == null) {
@@ -130,8 +158,7 @@ public class ProfessorDaoImpl implements ProfessorDao{
                     if (resultSet.next()) {
                         String nationalNumber = resultSet.getString("national_number");
                         return nationalNumber;
-                    }
-                    else return null;
+                    } else return null;
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -156,8 +183,7 @@ public class ProfessorDaoImpl implements ProfessorDao{
                     if (resultSet.next()) {
                         int id = resultSet.getInt("id");
                         return id;
-                    }
-                    else return 0;
+                    } else return 0;
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -167,5 +193,5 @@ public class ProfessorDaoImpl implements ProfessorDao{
         }
         return 0;
     }
-    }
+}
 

@@ -13,6 +13,7 @@ public interface StudentDao {
 
     String get_national_number(int id_number);
 
+    void updatePublicKey(String username,String publicKey);
 
     int get_id(String username);
 

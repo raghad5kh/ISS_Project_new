@@ -29,8 +29,12 @@ public class TCPClient {
     static commonDetails commonDetails = new commonDetails();
     static UserInfo userInfo = new UserInfo();
 
+    private static String sessionKey;
+
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
+        String publicKeyPath = "keys\\client\\pu" +"id_number" + "PL" + "key" + "ic.txt";
+        String privateKeyPath = "keys\\client\\pri" +"id_number" + "V" + "key" + "ate.txt";
         try {
             Socket socket = new Socket("127.0.0.1", 8888);
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -54,43 +58,44 @@ public class TCPClient {
             String serverMessage = in.readLine();
             System.out.println("Server response: " + serverMessage);
             String compareString ="Your SignIn has been done successfully.";
+            if (type==2) {
+                String serverMessage2 = in.readLine();
 
-            String serverMessage2 = in.readLine();
+                if (serverMessage2 == null) {
+                    return;
+                }
 
-            if (serverMessage2==null){
-                return ;
+                String[] parts = serverMessage2.split(",");
+                int id_number = Integer.parseInt(parts[0]);
+                String name = parts[1];
+                String password = parts[2];
+
+                if (serverMessage.substring(0, serverMessage.indexOf('.') + 1).equals(compareString.substring(0, compareString.indexOf('.') + 1))) {
+                    processUserinfo(clientMessage, out, scanner, id_number, name, password);
+                }
+
+                String serverMessage3 = in.readLine();
+                StudentDao studentDao = new StudentDaoImpl();
+                ProfessorDao professorDao = new ProfessorDaoImpl();
+                String key = studentDao.get_national_number(id_number);
+                if (key == null) {
+                    key = professorDao.get_national_number(id_number);
+                }
+                String serverMessage3_after_decrypt = AsymmetricEncryption.decrypt(serverMessage3, key);
+                System.out.println("Server response: " + serverMessage3_after_decrypt);
+                System.out.println("--start generate kesy --");
+
+                // generate pair key
+
+                PrettyGoodPrivacy.generateKeyPair(privateKeyPath, publicKeyPath);
+
             }
-
-            String[] parts = serverMessage2.split(",");
-            int id_number= Integer.parseInt(parts[0]);
-            String name= parts[1];
-            String password = parts[2];
-
-            if(serverMessage.substring(0, serverMessage.indexOf('.') + 1).equals(compareString.substring(0, compareString.indexOf('.') + 1))) {
-                processUserinfo(clientMessage, out, scanner,id_number,name,password);
-            }
-
-            String serverMessage3 = in.readLine();
-            StudentDao studentDao = new StudentDaoImpl();
-            ProfessorDao professorDao = new ProfessorDaoImpl();
-            String key = studentDao.get_national_number(id_number);
-            if(key==null){
-                key = professorDao.get_national_number(id_number);
-            }
-            String serverMessage3_after_decrypt = AsymmetricEncryption.decrypt(serverMessage3,key);
-            System.out.println("Server response: " + serverMessage3_after_decrypt);
-
-            System.out.println("--start generate kesy --");
-
-            // generate pair key
-            String publicKeyPath = "keys\\client\\pu" +"id_number" + "PL" + "key" + "ic.txt";
-            String privateKeyPath = "keys\\client\\pri" +"id_number" + "V" + "key" + "ate.txt";
-            PrettyGoodPrivacy.generateKeyPair(privateKeyPath, publicKeyPath);
-            //handshake
+             //handshake
             PublicKey serverPublicKey = performHandshake(publicKeyPath,in,out);
 
             // generate session key and send it
             String sessionkey = AsymmetricEncryption.generateKey();
+            sessionKey=sessionkey;
             System.out.println("sessionkey : " +sessionkey);
             AsymmetricEncryption.encrypt("alaaaajhgf",sessionkey);
             String sessionkeyEncrypte =PrettyGoodPrivacy.encryptRSA(sessionkey,serverPublicKey);
@@ -106,10 +111,6 @@ public class TCPClient {
         } catch (Exception e) {
             System.out.println(e);
         }
-    }
-
-    private static void completeInfo(){
-
     }
 
     private static void getClientDetails(Socket socket) {
@@ -155,9 +156,7 @@ public class TCPClient {
 
     public static PublicKey performHandshake(String publicKeyPath,BufferedReader in,PrintWriter out) throws Exception {
         System.out.println(">> Handshake started ...");
-        // Create input and output streams for communication
-//        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-//        PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+
         PublicKey publicKey = PrettyGoodPrivacy.readPublicKeyFromFile(publicKeyPath);
         // Send the client's public key to the server
         String publicKeyToString = PrettyGoodPrivacy.convertPublicKeyToString(publicKey);

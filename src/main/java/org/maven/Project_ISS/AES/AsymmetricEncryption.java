@@ -32,36 +32,33 @@ public class AsymmetricEncryption {
         return new String(decryptedBytes);
     }
 
-    public static String generateKey() throws NoSuchAlgorithmException {
-        byte[] secureRandomKeyBytes = new byte[256 / 8];
-        SecureRandom secureRandom = new SecureRandom();
-        secureRandom.nextBytes(secureRandomKeyBytes);
-        Key aesKey =new SecretKeySpec(secureRandomKeyBytes, ALGORITHM);
-        // Display the generated key
-        byte[] keyBytes = aesKey.getEncoded();
-        return Base64.getEncoder().encodeToString(keyBytes);
-    }
-
-//    public static String generateKey(String national_number) {
-//        // Define the character set from which the random string will be composed
-//        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789";
-//
-//        // Generate a random length for the string (between 5 and 15 characters, for example)
-//        int minLength = 20;
-//        int maxLength = 50;
-//        int randomLength = new Random().nextInt(maxLength - minLength + 1) + minLength;
-//
-//        // Generate the random string
-//        StringBuilder randomStringBuilder = new StringBuilder();
-//        Random random = new Random();
-//        for (int i = 0; i < randomLength; i++) {
-//            int index = random.nextInt(characters.length());
-//            randomStringBuilder.append(characters.charAt(index));
-//            if(i==randomLength/3){
-//                randomStringBuilder.append(national_number);
-//            }
-//        }
-//
-//        return randomStringBuilder.toString();
+//    public static String generateKey() throws NoSuchAlgorithmException {
+//        byte[] secureRandomKeyBytes = new byte[32];
+//        SecureRandom secureRandom = new SecureRandom();
+//        secureRandom.nextBytes(secureRandomKeyBytes);
+//        Key aesKey =new SecretKeySpec(secureRandomKeyBytes, ALGORITHM);
+//        // Display the generated key
+//        byte[] keyBytes = aesKey.getEncoded();
+//        return Base64.getEncoder().encodeToString(keyBytes);
 //    }
+
+    public static String generateKey() {
+        // Define the character set from which the random string will be composed
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789";
+
+        // Generate a random length for the string (between 5 and 15 characters, for example)
+        int minLength = 32;
+        int maxLength = 32;
+        int randomLength = new Random().nextInt(maxLength - minLength + 1) + minLength;
+
+        // Generate the random string
+        StringBuilder randomStringBuilder = new StringBuilder();
+        Random random = new Random();
+        for (int i = 0; i < randomLength; i++) {
+            int index = random.nextInt(characters.length());
+            randomStringBuilder.append(characters.charAt(index));
+        }
+
+        return randomStringBuilder.toString();
+    }
 }

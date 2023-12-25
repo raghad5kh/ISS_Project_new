@@ -1,7 +1,7 @@
 package org.maven.Project_ISS.socket;
 
 import org.maven.Project_ISS.AES.AsymmetricEncryption;
-import org.maven.Project_ISS.PGP.PrettyGoodPrivacy;
+import org.maven.Project_ISS.PGoodP.PrettyGoodPrivacy;
 import org.maven.Project_ISS.dao.ProfessorDao;
 import org.maven.Project_ISS.dao.ProfessorDaoImpl;
 import org.maven.Project_ISS.dao.StudentDao;

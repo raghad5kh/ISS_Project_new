@@ -1,4 +1,4 @@
-package org.maven.Project_ISS.PGP;
+package org.maven.Project_ISS.PGoodP;
 
 import javax.crypto.Cipher;
 import java.io.File;

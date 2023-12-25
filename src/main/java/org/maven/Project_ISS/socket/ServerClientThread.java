@@ -14,7 +14,10 @@ import java.security.PublicKey;
 
 public class ServerClientThread extends Thread {
     private final Socket serverClient;
+    private String sessionKey;
     private final int clientNo;
+
+    private static String username;
 
     public ServerClientThread(Socket inSocket, int counter) {
         serverClient = inSocket;
@@ -40,6 +43,7 @@ public class ServerClientThread extends Thread {
                 System.out.println(request);
                 String name = in.readLine();
                 System.out.println("Name: " + name);
+                username = name;
                 String password = in.readLine();
                 System.out.println("Password: " + password);
 
@@ -58,7 +62,7 @@ public class ServerClientThread extends Thread {
                 System.out.println("id_number: " + id_number);
                 String name = in.readLine();
                 System.out.println("Name: " + name);
-
+                username = name;
                 String password = in.readLine();
                 System.out.println("Password: " + password);
 
@@ -105,10 +109,14 @@ public class ServerClientThread extends Thread {
             }
             // handshake
             PublicKey clientPublicKey = performHandshake(in, out);
+
+            //store public key in database
+            addingPublicKeyToDB(clientPublicKey);
             //recieve session key
             String clientMessage = in.readLine();
             String sessionkey = PrettyGoodPrivacy.decryptRSA(clientMessage, "keys\\server\\priSVerVerate.txt");
             System.out.println("session key : " + sessionkey);
+            sessionKey=sessionkey;
 
             //send ok responce
             String serverMessage = "The session key has been received";
@@ -122,11 +130,24 @@ public class ServerClientThread extends Thread {
             serverClient.close();*/
 
         } catch (Exception ex) {
-            System.out.println(ex);
+            System.out.println(ex.getMessage());
         } finally {
             System.out.println("Client - " + clientNo + " exit!!");
         }
+    }
 
+    private static void addingPublicKeyToDB(PublicKey publicKey) {
+        System.out.println("hiii ppppppp");
+        StudentDao studentDao = new StudentDaoImpl();
+        ProfessorDao professorDao = new ProfessorDaoImpl();
+        int id = studentDao.get_id(username);
+        if (id == 0) {
+            id = professorDao.get_id(username);
+            professorDao.updatePublicKey(username, PrettyGoodPrivacy.convertPublicKeyToString(publicKey));
+        } else {
+            System.out.println("hiii ppppppp");
+            studentDao.updatePublicKey(username, PrettyGoodPrivacy.convertPublicKeyToString(publicKey));
+        }
     }
 
     private PublicKey performHandshake(BufferedReader in, PrintWriter out) throws Exception {
@@ -141,13 +162,13 @@ public class ServerClientThread extends Thread {
 
         System.out.println("Client public key: " + clientMessage);
 
-        System.out.println("===============================================================================");
         PublicKey clientPublicKey = PrettyGoodPrivacy.convertStringToPublicKey(clientMessage);
 
         PublicKey serverPublicKey = PrettyGoodPrivacy.readPublicKeyFromFile("keys\\server\\puSPerVerlic.txt");
         String publicKeyToString = PrettyGoodPrivacy.convertPublicKeyToString(serverPublicKey);
 
         out.println(publicKeyToString);
+        System.out.println("===============================================================================");
 
         return clientPublicKey;
     }

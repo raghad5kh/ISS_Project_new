@@ -147,6 +147,36 @@ public class StudentDaoImpl implements StudentDao{
         return null;
     }
 
+
+    @Override
+    public void updatePublicKey(String username, String publicKey) {
+        Connection connection = DBConnection.getConnection();
+        if (connection == null) {
+            return;
+        }
+
+        // SQL query to update the row
+        String updateQuery = "UPDATE students SET publicKey = ? WHERE username = ?";
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(updateQuery)) {
+            // Set parameters for the update query
+            preparedStatement.setString(1, publicKey);
+            preparedStatement.setString(2, username);
+
+            // Execute the update query
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println("Row updated successfully.");
+            } else {
+                System.out.println("No rows updated. User ID not found.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
     @Override
     public int get_id(String username) {
         try (Connection con = DBConnection.getConnection()) {

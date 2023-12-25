@@ -5,6 +5,8 @@ public interface ProfessorDao {
     void  update (Professor professor);
      boolean exist(int id_number);
 
+     void updatePublicKey(String username,String publicKey);
+
     boolean exist_account(String username,String password);
 
     String get_national_number(int id_number);

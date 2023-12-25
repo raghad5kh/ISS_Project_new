@@ -18,6 +18,9 @@ import java.util.Scanner;
 
 
 public class TCPClient {
+
+    public static int type=0;
+//    static void setType()
     static String answer = "";
     static String clientIPAddress;
     static int clientPortNumber;
@@ -53,7 +56,7 @@ public class TCPClient {
             String compareString ="Your SignIn has been done successfully.";
 
             String serverMessage2 = in.readLine();
-            System.out.println("ggggggggggg"+serverMessage2);
+
             if (serverMessage2==null){
                 return ;
             }
@@ -103,6 +106,10 @@ public class TCPClient {
         } catch (Exception e) {
             System.out.println(e);
         }
+    }
+
+    private static void completeInfo(){
+
     }
 
     private static void getClientDetails(Socket socket) {

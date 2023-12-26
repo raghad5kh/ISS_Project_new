@@ -37,8 +37,10 @@ public class TCPClient {
 
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
-        String publicKeyPath = "keys\\client\\pu" + "id_number" + "PL" + "key" + "ic.txt";
-        String privateKeyPath = "keys\\client\\pri" + "id_number" + "V" + "key" + "ate.txt";
+        String publicKeyPath = "";
+        String privateKeyPath = "";
+        int id_number;
+        String national_number;
         try {
             Socket socket = new Socket("127.0.0.1", 8888);
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -71,7 +73,7 @@ public class TCPClient {
                 }
 
                 String[] parts = serverMessage2.split(",");
-                int id_number = Integer.parseInt(parts[0]);
+                id_number = Integer.parseInt(parts[0]);
                 String name = parts[1];
                 String password = parts[2];
 
@@ -86,13 +88,27 @@ public class TCPClient {
                 if (key == null) {
                     key = professorDao.get_national_number(id_number);
                 }
+                national_number = key;
                 String serverMessage3_after_decrypt = AsymmetricEncryption.decrypt(serverMessage3, key);
                 System.out.println("Server response: " + serverMessage3_after_decrypt);
                 System.out.println("--start generate kesy --");
 
                 // generate pair key
+                publicKeyPath = "keys\\client\\pu" + id_number + "PL" + key + "ic.txt";
+                privateKeyPath = "keys\\client\\pri" + id_number + "V" + key + "ate.txt";
                 PrettyGoodPrivacy.generateKeyPair(privateKeyPath, publicKeyPath);
-                System.out.println("jjjjjjjjj");
+            }else {
+                if (StudentDaoImpl.isStudent(username)) {
+                    id_number = StudentDaoImpl.get_id_number(username);
+                    StudentDaoImpl studentDao = new StudentDaoImpl();
+                    national_number = studentDao.get_national_number(id_number);
+                } else {
+                    id_number = ProfessorDaoImpl.get_id_number(username);
+                    ProfessorDaoImpl professorDao = new ProfessorDaoImpl();
+                    national_number = professorDao.get_national_number(id_number);
+                }
+                publicKeyPath = "keys\\client\\pu" + id_number + "PL" + national_number + "ic.txt";
+                privateKeyPath = "keys\\client\\pri" + id_number + "V" + national_number + "ate.txt";
             }
 
             //handshake
@@ -102,7 +118,7 @@ public class TCPClient {
             String sessionkey = AsymmetricEncryption.generateKey();
             sessionKey = sessionkey;
             System.out.println("sessionkey : " + sessionkey);
-            AsymmetricEncryption.encrypt("alaaaajhgf", sessionkey);
+
             String sessionkeyEncrypte = PrettyGoodPrivacy.encryptRSA(sessionkey, serverPublicKey);
             out.println(sessionkeyEncrypte);
             //receive ok message

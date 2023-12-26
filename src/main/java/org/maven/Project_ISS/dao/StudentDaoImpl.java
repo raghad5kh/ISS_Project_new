@@ -90,7 +90,7 @@ public class StudentDaoImpl implements StudentDao {
             preparedStatement.setInt(1, id_number);
 
             ResultSet resultSet = preparedStatement.executeQuery();
-            if (resultSet.next()) {
+            if (resultSet.next() && resultSet.getString("type").equals("s")) {
                 return true;
             } else {
                 return false;
@@ -135,6 +135,34 @@ public class StudentDaoImpl implements StudentDao {
         }
     }
 
+    public static int get_id_number(String username) throws SQLException {
+        try (Connection con = DBConnection.getConnection()) {
+            if (con == null) {
+                return -1;
+            }
+            String query = "SELECT list_data_id FROM students WHERE username = ?;";
+            int list_data_id = 0;
+            try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+                preparedStatement.setString(1, username);
+                ResultSet resultSet = preparedStatement.executeQuery();
+
+                if (resultSet.next()) {
+                    list_data_id = resultSet.getInt("list_data_id");
+                } else return -1;
+                String query1 = "SELECT id_number FROM list_data WHERE id = ?;";
+                PreparedStatement preparedStatement1 = con.prepareStatement(query1);
+                preparedStatement1.setInt(1, list_data_id);
+                ResultSet resultSet1 = preparedStatement1.executeQuery();
+                if (resultSet1.next()) {
+                    int id_number = resultSet1.getInt("id_number");
+                    return id_number;
+                } else return -1;
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return -1;
+        }
+    }
     @Override
 
     public String get_national_number(int id_number) {

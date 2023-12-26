@@ -14,31 +14,36 @@ import org.maven.Project_ISS.socket.ClientComponents.commonDetails;
 import java.io.*;
 import java.net.Socket;
 import java.security.PublicKey;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 
 public class TCPClient {
 
-    public static int type=0;
-//    static void setType()
+    public static int type = 0;
+    //    static void setType()
     static String answer = "";
     static String clientIPAddress;
     static int clientPortNumber;
     static ProfessorClient professorClient = new ProfessorClient();
     static StudentClient studentClient = new StudentClient();
     static commonDetails commonDetails = new commonDetails();
+
+    public static String username;
     static UserInfo userInfo = new UserInfo();
 
     private static String sessionKey;
 
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
-        String publicKeyPath = "keys\\client\\pu" +"id_number" + "PL" + "key" + "ic.txt";
-        String privateKeyPath = "keys\\client\\pri" +"id_number" + "V" + "key" + "ate.txt";
+        String publicKeyPath = "keys\\client\\pu" + "id_number" + "PL" + "key" + "ic.txt";
+        String privateKeyPath = "keys\\client\\pri" + "id_number" + "V" + "key" + "ate.txt";
         try {
             Socket socket = new Socket("127.0.0.1", 8888);
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 
             getClientDetails(socket);
 
@@ -57,8 +62,8 @@ public class TCPClient {
 
             String serverMessage = in.readLine();
             System.out.println("Server response: " + serverMessage);
-            String compareString ="Your SignIn has been done successfully.";
-            if (type==2) {
+            String compareString = "Your SignIn has been done successfully.";
+            if (type == 2) {
                 String serverMessage2 = in.readLine();
 
                 if (serverMessage2 == null) {
@@ -86,24 +91,32 @@ public class TCPClient {
                 System.out.println("--start generate kesy --");
 
                 // generate pair key
-
                 PrettyGoodPrivacy.generateKeyPair(privateKeyPath, publicKeyPath);
-
+                System.out.println("jjjjjjjjj");
             }
-             //handshake
-            PublicKey serverPublicKey = performHandshake(publicKeyPath,in,out);
+
+            //handshake
+            PublicKey serverPublicKey = performHandshake(publicKeyPath, in, out);
 
             // generate session key and send it
             String sessionkey = AsymmetricEncryption.generateKey();
-            sessionKey=sessionkey;
-            System.out.println("sessionkey : " +sessionkey);
-            AsymmetricEncryption.encrypt("alaaaajhgf",sessionkey);
-            String sessionkeyEncrypte =PrettyGoodPrivacy.encryptRSA(sessionkey,serverPublicKey);
+            sessionKey = sessionkey;
+            System.out.println("sessionkey : " + sessionkey);
+            AsymmetricEncryption.encrypt("alaaaajhgf", sessionkey);
+            String sessionkeyEncrypte = PrettyGoodPrivacy.encryptRSA(sessionkey, serverPublicKey);
             out.println(sessionkeyEncrypte);
+            //receive ok message
+            String okresponce = in.readLine();
+            String okresponceAfter = AsymmetricEncryption.decrypt(okresponce, sessionkey);
+            System.out.println("ok responce : " + okresponceAfter);
 
-            String okresponce=in.readLine();
-            String okresponceAfter=AsymmetricEncryption.decrypt(okresponce,sessionkey);
-            System.out.println("ok responce : "+okresponceAfter);
+            //send list of student's project
+            sendList(objectOutputStream);
+
+            //recieve ok message
+            String ok = in.readLine();
+            System.out.println("received Message : " + AsymmetricEncryption.decrypt(ok, sessionkey));
+
 
       /*      in.close();
             out.close();
@@ -111,6 +124,26 @@ public class TCPClient {
         } catch (Exception e) {
             System.out.println(e);
         }
+    }
+
+    private static void sendList(ObjectOutputStream objectOutputStream) throws Exception {
+
+        if (!StudentDaoImpl.isStudent(username)) return;
+
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Now, Please enter you projects number : ");
+        int n = scanner.nextInt();
+        scanner.nextLine();
+        List<String> projectsList = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            System.out.println("Enter your project number " + (i + 1) + " : ");
+            String project = scanner.nextLine();
+            projectsList.add(AsymmetricEncryption.encrypt(project, sessionKey));
+        }
+        // Send the List to the server
+        objectOutputStream.writeObject(projectsList);
+        objectOutputStream.flush();
+        System.out.println("Projects List sent to the server.");
     }
 
     private static void getClientDetails(Socket socket) {
@@ -124,11 +157,11 @@ public class TCPClient {
 
         switch (clientMessage) {
             case "1":
-             professorClient.processProfessor(answer,out,scanner,clientIPAddress,clientPortNumber);
+                professorClient.processProfessor(answer, out, scanner, clientIPAddress, clientPortNumber);
 //                processProfessor(out, scanner);
                 break;
             case "2":
-                studentClient.processStudent(out,scanner,answer,clientIPAddress,clientPortNumber);
+                studentClient.processStudent(out, scanner, answer, clientIPAddress, clientPortNumber);
 //                processStudent(out, scanner);
                 break;
             default:
@@ -137,15 +170,15 @@ public class TCPClient {
         }
     }
 
-    private static void processUserinfo(String clientMessage, PrintWriter out, Scanner scanner,int id_number,String name,String password) throws Exception {
+    private static void processUserinfo(String clientMessage, PrintWriter out, Scanner scanner, int id_number, String name, String password) throws Exception {
 
 
         switch (clientMessage) {
             case "1":
-               userInfo.ProfessorInfo(out,scanner,clientIPAddress,clientPortNumber,id_number,name,password);
+                userInfo.ProfessorInfo(out, scanner, clientIPAddress, clientPortNumber, id_number, name, password);
                 break;
             case "2":
-                userInfo.StudentInfo(out, scanner,clientIPAddress,clientPortNumber,id_number,name,password);
+                userInfo.StudentInfo(out, scanner, clientIPAddress, clientPortNumber, id_number, name, password);
                 break;
             default:
                 System.out.println("Unexpected answer!");
@@ -154,7 +187,7 @@ public class TCPClient {
     }
 
 
-    public static PublicKey performHandshake(String publicKeyPath,BufferedReader in,PrintWriter out) throws Exception {
+    public static PublicKey performHandshake(String publicKeyPath, BufferedReader in, PrintWriter out) throws Exception {
         System.out.println(">> Handshake started ...");
 
         PublicKey publicKey = PrettyGoodPrivacy.readPublicKeyFromFile(publicKeyPath);
@@ -367,10 +400,6 @@ public class TCPClient {
 
 //            int user_password_logIn=0;
 //            int user_password_signIn=0;
-
-
-
-
 
 
 //////-----

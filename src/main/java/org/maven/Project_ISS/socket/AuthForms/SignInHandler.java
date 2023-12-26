@@ -4,6 +4,7 @@ import org.maven.Project_ISS.dao.Professor;
 import org.maven.Project_ISS.dao.ProfessorDao;
 import org.maven.Project_ISS.dao.Student;
 import org.maven.Project_ISS.dao.StudentDao;
+import org.maven.Project_ISS.socket.TCPClient;
 
 import java.io.PrintWriter;
 
@@ -19,11 +20,13 @@ public class SignInHandler {
     }
 
     public void handleSignIn(int id_number ,String name,String password ) {
+        TCPClient.username=name;
         boolean isStudentExist = studentDao.exist(id_number);
         boolean isProfExist = professorDao.exist(id_number);
         if (isStudentExist) {
+
             Student student = new Student(0,name,password,null,0,0);
-            studentDao.save(student);
+            studentDao.save(student,id_number);
             System.out.println("Client: Sign in successful for " + name );
             out.println("Your SignIn has been done successfully. Welcome, " + name);
             System.out.println("SignIn Done!");
@@ -31,7 +34,7 @@ public class SignInHandler {
         }
         else if (isProfExist) {
             Professor professor = new Professor(0,name,password,null,0,0);
-            professorDao.save(professor);
+            professorDao.save(professor,id_number);
             System.out.println("Client: Sign in successful for " + name );
             out.println("Your SignIn has been done successfully. Welcome, " + name);
             System.out.println("SignIn Done!");

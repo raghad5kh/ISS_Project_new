@@ -1,7 +1,7 @@
 package org.maven.Project_ISS.dao;
 
 public interface ProfessorDao {
-    void  save(Professor professor);
+    void  save(Professor professor,int id_number);
     void  update (Professor professor);
      boolean exist(int id_number);
 

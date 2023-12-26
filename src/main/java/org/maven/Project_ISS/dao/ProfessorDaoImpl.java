@@ -7,18 +7,35 @@ import java.sql.SQLException;
 
 public class ProfessorDaoImpl implements ProfessorDao {
     @Override
-    public void save(Professor professor) {
+    public void save(Professor professor,int id_number) {
         Connection con = DBConnection.getConnection();
         if (con == null) {
             return;
         }
-        String query = "INSERT INTO professor(username,password,address,phone_number,mobile_number) VALUES (?,?,?,?,?);";
+        int id = 0;
+        String queryFind = "SELECT id FROM list_data WHERE id_number = ?;";
+        try (PreparedStatement preparedStatement = con.prepareStatement(queryFind)) {
+            preparedStatement.setInt(1, id_number);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    id = resultSet.getInt("id");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+
+        String query = "INSERT INTO professor(username,password,address,phone_number,mobile_number,list_data_id) VALUES (?,?,?,?,?,?);";
         try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
             preparedStatement.setString(1, professor.getUsername());
             preparedStatement.setString(2, professor.getPassword());
             preparedStatement.setString(3, professor.getAddress());
             preparedStatement.setInt(4, professor.getPhone_number());
             preparedStatement.setInt(5, professor.getMobile_number());
+            preparedStatement.setInt(6, id);
+
             preparedStatement.executeUpdate();
 
         } catch (SQLException e) {
@@ -65,7 +82,7 @@ public class ProfessorDaoImpl implements ProfessorDao {
         if (con == null) {
             return false;
         }
-        String query = "SELECT * FROM list_pros WHERE id_number= ?;";
+        String query = "SELECT * FROM list_data WHERE id_number= ?;";
         try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
             preparedStatement.setInt(1, id_number);
 
@@ -150,7 +167,7 @@ public class ProfessorDaoImpl implements ProfessorDao {
             if (con == null) {
                 return null;
             }
-            String query = "SELECT national_number FROM list_pros WHERE id_number = ?;";
+            String query = "SELECT national_number FROM list_data WHERE id_number = ?;";
             try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
                 preparedStatement.setInt(1, id_number);
 

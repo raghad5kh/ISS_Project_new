@@ -2,13 +2,23 @@ package org.maven.Project_ISS.dao;
 
 public class Professor {
     private Integer id;
-    private  String username;
+
+    private int list_pros_id;
+    private String username;
     private String password;
     private String address;
-    private  int phone_number;
-    private  int mobile_number;
+    private int phone_number;
+    private int mobile_number;
 
     public Professor() {
+    }
+
+    public int getList_pros_id() {
+        return list_pros_id;
+    }
+
+    public void setList_pros_id(int list_pros_id) {
+        this.list_pros_id = list_pros_id;
     }
 
     public String getAddress() {

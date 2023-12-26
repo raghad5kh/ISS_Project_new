@@ -23,6 +23,7 @@ public class SignInHandler {
         TCPClient.username=name;
         boolean isStudentExist = studentDao.exist(id_number);
         boolean isProfExist = professorDao.exist(id_number);
+
         if (isStudentExist) {
 
             Student student = new Student(0,name,password,null,0,0);
@@ -35,6 +36,7 @@ public class SignInHandler {
         else if (isProfExist) {
             Professor professor = new Professor(0,name,password,null,0,0);
             professorDao.save(professor,id_number);
+            System.out.println("saaaaaaaaaaaavvvvvvvvvvveeee PPPPPPPPPPP");
             System.out.println("Client: Sign in successful for " + name );
             out.println("Your SignIn has been done successfully. Welcome, " + name);
             System.out.println("SignIn Done!");

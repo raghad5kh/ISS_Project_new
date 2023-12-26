@@ -3,6 +3,7 @@ package org.maven.Project_ISS.socket.AuthForms;
 
 import org.maven.Project_ISS.dao.ProfessorDao;
 import org.maven.Project_ISS.dao.StudentDao;
+import org.maven.Project_ISS.socket.TCPClient;
 
 import java.io.PrintWriter;
 
@@ -18,6 +19,7 @@ public class LoginHandler {
     }
 
     public void handleLogin(String name, String password) {
+        TCPClient.username=name;
         System.out.println("Client logged in: " + name);
 
         boolean isStudentExist = studentDao.exist_account(name,password);

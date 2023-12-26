@@ -24,7 +24,7 @@ public class MultithreadedSocketServer {
     }
 }*/
 
-import org.maven.Project_ISS.PGP.PrettyGoodPrivacy;
+import org.maven.Project_ISS.PGoodP.PrettyGoodPrivacy;
 
 import java.net.ServerSocket;
 import java.net.Socket;

@@ -8,9 +8,12 @@ import org.maven.Project_ISS.socket.AuthForms.SignInHandler;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.security.PublicKey;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ServerClientThread extends Thread {
     private final Socket serverClient;
@@ -30,7 +33,7 @@ public class ServerClientThread extends Thread {
             ProfessorDao professorDao = new ProfessorDaoImpl();
             BufferedReader in = new BufferedReader(new InputStreamReader(serverClient.getInputStream()));
             PrintWriter out = new PrintWriter(serverClient.getOutputStream(), true);
-
+            ObjectInputStream objectInputStream = new ObjectInputStream(serverClient.getInputStream());
 
             // Read client request
             String request = in.readLine();
@@ -116,12 +119,26 @@ public class ServerClientThread extends Thread {
             String clientMessage = in.readLine();
             String sessionkey = PrettyGoodPrivacy.decryptRSA(clientMessage, "keys\\server\\priSVerVerate.txt");
             System.out.println("session key : " + sessionkey);
-            sessionKey=sessionkey;
+            sessionKey = sessionkey;
 
             //send ok responce
             String serverMessage = "The session key has been received";
             serverMessage = AsymmetricEncryption.encrypt(serverMessage, sessionkey);
             out.println(serverMessage);
+
+            //receive Projects list from student
+            List<String> projectsListEncoded = (List<String>) objectInputStream.readObject();
+            List<String> projectList = new ArrayList<>();
+            for (int i = 0; i < projectsListEncoded.size(); i++) {
+                String project = AsymmetricEncryption.decrypt(projectsListEncoded.get(i), sessionkey);
+                projectList.add(project);
+                System.out.println("Project number " + (i + 1) + " : " + projectsListEncoded.get(i));
+                System.out.println("Project number " + (i + 1) + " : " + project);
+            }
+            String receivedMessage = "Dear student , " + username + " , your project has been received";
+            out.println(AsymmetricEncryption.encrypt(receivedMessage, sessionkey));
+            System.out.println("receivedMessage : " + receivedMessage);
+
 
 
 
@@ -137,7 +154,7 @@ public class ServerClientThread extends Thread {
     }
 
     private static void addingPublicKeyToDB(PublicKey publicKey) {
-        System.out.println("hiii ppppppp");
+
         StudentDao studentDao = new StudentDaoImpl();
         ProfessorDao professorDao = new ProfessorDaoImpl();
         int id = studentDao.get_id(username);
@@ -145,7 +162,6 @@ public class ServerClientThread extends Thread {
             id = professorDao.get_id(username);
             professorDao.updatePublicKey(username, PrettyGoodPrivacy.convertPublicKeyToString(publicKey));
         } else {
-            System.out.println("hiii ppppppp");
             studentDao.updatePublicKey(username, PrettyGoodPrivacy.convertPublicKeyToString(publicKey));
         }
     }

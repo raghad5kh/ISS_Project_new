@@ -6,26 +6,41 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-public class StudentDaoImpl implements StudentDao{
+public class StudentDaoImpl implements StudentDao {
 
 
     @Override
-    public void save(Student student) {
+    public void save(Student student, int id_number) {
         Connection con = DBConnection.getConnection();
-        if(con==null){
-            return ;
+        if (con == null) {
+            return;
         }
-        String query ="INSERT INTO students(username,password,address,phone_number,mobile_number) VALUES (?,?,?,?,?);";
-        try (PreparedStatement preparedStatement = con.prepareStatement(query)){
-            preparedStatement.setString(1,student.getUsername());
-            preparedStatement.setString(2,student.getPassword());
-            preparedStatement.setString(3,student.getAddress());
-            preparedStatement.setInt(4,student.getPhone_number());
-            preparedStatement.setInt(5,student.getMobile_number());
+        int id = 0;
+        String queryFind = "SELECT id FROM list_data WHERE id_number = ?;";
+        try (PreparedStatement preparedStatement = con.prepareStatement(queryFind)) {
+            preparedStatement.setInt(1, id_number);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    id = resultSet.getInt("id");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        String query = "INSERT INTO students(username,password,address,phone_number,mobile_number,list_data_id) VALUES (?,?,?,?,?,?);";
+        try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+            preparedStatement.setString(1, student.getUsername());
+            preparedStatement.setString(2, student.getPassword());
+            preparedStatement.setString(3, student.getAddress());
+            preparedStatement.setInt(4, student.getPhone_number());
+            preparedStatement.setInt(5, student.getMobile_number());
+            preparedStatement.setInt(6, id);
             preparedStatement.executeUpdate();
 
         } catch (SQLException e) {
-           e.printStackTrace();
+            e.printStackTrace();
         } finally {
             try {
                 con.close();
@@ -39,17 +54,17 @@ public class StudentDaoImpl implements StudentDao{
     @Override
     public void update(Student student) {
         Connection con = DBConnection.getConnection();
-        if(con==null){
-            return ;
+        if (con == null) {
+            return;
         }
-        String query ="UPDATE students SET username=?,password=?,address=?,phone_number=?,mobile_number=? WHERE id=?;";
-        try (PreparedStatement preparedStatement = con.prepareStatement(query)){
-            preparedStatement.setString(1,student.getUsername());
-            preparedStatement.setString(2,student.getPassword());
-            preparedStatement.setString(3,student.getAddress());
-            preparedStatement.setInt(4,student.getPhone_number());
-            preparedStatement.setInt(5,student.getMobile_number());
-            preparedStatement.setInt(6,student.getId());
+        String query = "UPDATE students SET username=?,password=?,address=?,phone_number=?,mobile_number=? WHERE id=?;";
+        try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+            preparedStatement.setString(1, student.getUsername());
+            preparedStatement.setString(2, student.getPassword());
+            preparedStatement.setString(3, student.getAddress());
+            preparedStatement.setInt(4, student.getPhone_number());
+            preparedStatement.setInt(5, student.getMobile_number());
+            preparedStatement.setInt(6, student.getId());
             preparedStatement.executeUpdate();
 
         } catch (SQLException e) {
@@ -65,17 +80,17 @@ public class StudentDaoImpl implements StudentDao{
 
 
     @Override
-    public boolean exist(int id_number){
+    public boolean exist(int id_number) {
         Connection con = DBConnection.getConnection();
-        if(con==null){
+        if (con == null) {
             return false;
         }
-        String query ="SELECT * FROM list_stus WHERE id_number= ?;";
-        try (PreparedStatement preparedStatement = con.prepareStatement(query)){
-            preparedStatement.setInt(1,id_number);
+        String query = "SELECT * FROM list_data WHERE id_number= ?;";
+        try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+            preparedStatement.setInt(1, id_number);
 
             ResultSet resultSet = preparedStatement.executeQuery();
-            if(resultSet.next()){
+            if (resultSet.next() && resultSet.getString("type").equals("s")) {
                 return true;
             } else {
                 return false;
@@ -95,15 +110,15 @@ public class StudentDaoImpl implements StudentDao{
     @Override
     public boolean exist_account(String username, String password) {
         Connection con = DBConnection.getConnection();
-        if(con==null){
+        if (con == null) {
             return false;
         }
-        String query ="SELECT * FROM students WHERE username= ? AND password=?;";
-        try (PreparedStatement preparedStatement = con.prepareStatement(query)){
-            preparedStatement.setString(1,username);
-            preparedStatement.setString(2,password);
+        String query = "SELECT * FROM students WHERE username= ? AND password=?;";
+        try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+            preparedStatement.setString(1, username);
+            preparedStatement.setString(2, password);
             ResultSet resultSet = preparedStatement.executeQuery();
-            if(resultSet.next()){
+            if (resultSet.next()) {
                 return true;
             } else {
                 return false;
@@ -120,6 +135,34 @@ public class StudentDaoImpl implements StudentDao{
         }
     }
 
+    public static int get_id_number(String username) throws SQLException {
+        try (Connection con = DBConnection.getConnection()) {
+            if (con == null) {
+                return -1;
+            }
+            String query = "SELECT list_data_id FROM students WHERE username = ?;";
+            int list_data_id = 0;
+            try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+                preparedStatement.setString(1, username);
+                ResultSet resultSet = preparedStatement.executeQuery();
+
+                if (resultSet.next()) {
+                    list_data_id = resultSet.getInt("list_data_id");
+                } else return -1;
+                String query1 = "SELECT id_number FROM list_data WHERE id = ?;";
+                PreparedStatement preparedStatement1 = con.prepareStatement(query1);
+                preparedStatement1.setInt(1, list_data_id);
+                ResultSet resultSet1 = preparedStatement1.executeQuery();
+                if (resultSet1.next()) {
+                    int id_number = resultSet1.getInt("id_number");
+                    return id_number;
+                } else return -1;
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return -1;
+        }
+    }
     @Override
 
     public String get_national_number(int id_number) {
@@ -127,7 +170,7 @@ public class StudentDaoImpl implements StudentDao{
             if (con == null) {
                 return null;
             }
-            String query = "SELECT national_number FROM list_stus WHERE id_number = ?;";
+            String query = "SELECT national_number FROM list_data WHERE id_number = ?;";
             try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
                 preparedStatement.setInt(1, id_number);
 
@@ -135,8 +178,7 @@ public class StudentDaoImpl implements StudentDao{
                     if (resultSet.next()) {
                         String nationalNumber = resultSet.getString("national_number");
                         return nationalNumber;
-                    }
-                    else return null;
+                    } else return null;
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -176,6 +218,35 @@ public class StudentDaoImpl implements StudentDao{
         }
     }
 
+    public static boolean isStudent(String username) throws SQLException {
+        try (Connection con = DBConnection.getConnection()) {
+            if (con == null) {
+                return false;
+            }
+            String query = "SELECT list_data_id FROM students WHERE username = ?;";
+            int list_data_id = 0;
+            try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+                preparedStatement.setString(1, username);
+                ResultSet resultSet = preparedStatement.executeQuery();
+
+                if (resultSet.next()) {
+                    list_data_id = resultSet.getInt("list_data_id");
+                } else return false;
+                String query1 = "SELECT type FROM list_data WHERE id = ?;";
+                PreparedStatement preparedStatement1 = con.prepareStatement(query1);
+                preparedStatement1.setInt(1, list_data_id);
+                ResultSet resultSet1 = preparedStatement1.executeQuery();
+                if (resultSet1.next()) {
+                    String type = resultSet1.getString("type");
+                    return type.equals("s");
+                } else return false;
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return false;
+        }
+
+    }
 
     @Override
     public int get_id(String username) {
@@ -191,8 +262,7 @@ public class StudentDaoImpl implements StudentDao{
                     if (resultSet.next()) {
                         int id = resultSet.getInt("id");
                         return id;
-                    }
-                    else return 0;
+                    } else return 0;
                 }
             } catch (SQLException e) {
                 e.printStackTrace();

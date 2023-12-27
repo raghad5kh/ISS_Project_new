@@ -4,7 +4,7 @@ import java.util.List;
 
 public interface StudentDao {
 
-    void  save(Student student);
+    void  save(Student student,int id_number);
 
     void  update (Student student);
     boolean exist(int id_number);

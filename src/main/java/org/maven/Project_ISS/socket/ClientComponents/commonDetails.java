@@ -2,6 +2,7 @@ package org.maven.Project_ISS.socket.ClientComponents;
 
 import org.maven.Project_ISS.AES.AsymmetricEncryption;
 import org.maven.Project_ISS.dao.*;
+import org.maven.Project_ISS.socket.TCPClient;
 
 import java.io.PrintWriter;
 import java.util.Scanner;
@@ -22,6 +23,7 @@ public class commonDetails {
         name = scanner.next();
         System.out.println("Your name: " + name);
         out.println(name);
+        TCPClient.username=name;
 
         System.out.println("Enter your password");
         password = scanner.next();
@@ -72,6 +74,7 @@ public class commonDetails {
         name = scanner.next();
         System.out.println("Your name: " + name);
         out.println(name);
+        TCPClient.username=name;
 
         System.out.println("Enter your password");
         password = scanner.next();

@@ -161,6 +161,30 @@ public class ProfessorDaoImpl implements ProfessorDao {
         }
     }
 
+    @Override
+    public String get_publicKey(String  username) {
+        try (Connection con = DBConnection.getConnection()) {
+            if (con == null) {
+                return null;
+            }
+            String query = "SELECT publicKey FROM professor WHERE username = ?;";
+            try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+                preparedStatement.setString(1, username);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        String publicKey = resultSet.getString("publicKey");
+                        return publicKey;
+                    } else return null;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     public static int get_id_number(String username) throws SQLException {
         try (Connection con = DBConnection.getConnection()) {

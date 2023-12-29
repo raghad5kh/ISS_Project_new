@@ -1,6 +1,10 @@
 package org.maven.Project_ISS.socket;
 
 import org.maven.Project_ISS.AES.AsymmetricEncryption;
+import org.maven.Project_ISS.DigitalSignature.DSA;
+//import org.maven.Project_ISS.DigitalSignature.DigitalSignatureExample;
+import org.maven.Project_ISS.DigitalSignature.Student;
+import org.maven.Project_ISS.DigitalSignature.StudentMarks;
 import org.maven.Project_ISS.PGoodP.PrettyGoodPrivacy;
 import org.maven.Project_ISS.dao.ProfessorDao;
 import org.maven.Project_ISS.dao.ProfessorDaoImpl;
@@ -12,11 +16,14 @@ import org.maven.Project_ISS.socket.ClientComponents.UserInfo;
 import org.maven.Project_ISS.socket.ClientComponents.commonDetails;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.net.Socket;
+import java.security.KeyFactory;
 import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.security.PrivateKey;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.*;
 
 
 public class TCPClient {
@@ -24,6 +31,9 @@ public class TCPClient {
     public static int type = 0;
     //    static void setType()
     static String answer = "";
+    public static  boolean isEntered=false;
+    public static  List<Student> studentList = new ArrayList<>();
+
     static String clientIPAddress;
     static int clientPortNumber;
     static ProfessorClient professorClient = new ProfessorClient();
@@ -37,10 +47,17 @@ public class TCPClient {
 
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
+        StudentMarks studentMarks = new StudentMarks();
+        byte[] students_marks_msg;
+        ArrayList students_mark_list;
         String publicKeyPath = "";
         String privateKeyPath = "";
         int id_number;
         String national_number;
+        DSA dsa = new DSA();
+//        DigitalSignatureExample digitalSignatureExample = new DigitalSignatureExample();
+         students_marks_msg = studentMarks.getmessageByte(studentList);
+        byte[] sign_message ;
         try {
             Socket socket = new Socket("127.0.0.1", 8888);
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -125,13 +142,62 @@ public class TCPClient {
             String okresponce = in.readLine();
             String okresponceAfter = AsymmetricEncryption.decrypt(okresponce, sessionkey);
             System.out.println("ok responce : " + okresponceAfter);
+            PrivateKey privateKey= PrettyGoodPrivacy.readPrivateKeyFromFile(privateKeyPath);
+            PublicKey publicKey=PrettyGoodPrivacy.readPublicKeyFromFile(publicKeyPath);
+            System.out.println( "publll"+publicKey);
+
+            if (clientMessage.equals("1")) {
+//                studentMarks.MakeCoiceToEntermarks();
+
+//                if (isEntered) {
+                List<Student> studentsWithMarks = studentMarks.EnterMarks();
+//                System.out.println("isEntered----"+isEntered);
+//                    System.out.println( "students marks listtttt----");
+//                    studentMarks.getStudentsWithMarks(studentsWithMarks);
+                    byte[] serializedMatrix = studentMarks.getmessageByte(studentsWithMarks);
+                    byte[] signature = dsa.signMessage(serializedMatrix,privateKey);
+                    dsa.verifySignature(serializedMatrix,signature,publicKey);
+                    System.out.println("publicKey"+publicKey);
+                    System.out.println("verification staaaate"+dsa.verifySignature(serializedMatrix,signature,publicKey));
+                    System.out.println("signature arr"+Arrays.toString(signature));
+                System.out.println("serializedMatrix arr"+Arrays.toString(serializedMatrix));
+
+                System.out.println("array");
+                studentMarks.getStudentsWithMarks(studentsWithMarks);
+                System.out.println("array");
+
+//                    studentMarks.getStudentsWithMarks(studentsWithMarks);
+//                    byte[] signature = digitalSignatureExample.signMessage(privateKey,serializedMatrix);
+//                    System.out.println("privateKey----"+privateKey);
+//                    System.out.println("signature arr----"+ Arrays.toString(signature));
+//                    System.out.println("publicKey----"+publicKey );
+//                System.out.println("verifySignature----"+dsa.verifySignature(serializedMatrix,signature,publicKey) );
+
+//                String SignatureStr = Base64.getEncoder().encodeToString(signature);
+//                    System.out.println("Signature String----"+SignatureStr );
+                //----------------------------------
+                SendStudentsMarks(objectOutputStream,studentsWithMarks);
+                SignaturByteList(objectOutputStream,signature);
+                //----------------------------------
+
+                // Convert List<Student> to a string representation
+//                String studentsString = convertListToString(studentsWithMarks);
+                // Send the string to the server
+//                out.println(studentsString);
+//                    out.println(SignatureStr);
+//                    out.println(studentMarks.getStudentsWithMarks(studentsWithMarks));
+//                }
+            }
+
+// Add a function to combine matrix and signature
 
             //send list of student's project
             sendList(objectOutputStream);
+            if(clientMessage.equals("2")){
+                //recieve ok message
+                String ok = in.readLine();
+                System.out.println("received Message : " + AsymmetricEncryption.decrypt(ok, sessionkey));            }
 
-            //recieve ok message
-            String ok = in.readLine();
-            System.out.println("received Message : " + AsymmetricEncryption.decrypt(ok, sessionkey));
 
 
       /*      in.close();
@@ -141,11 +207,48 @@ public class TCPClient {
             System.out.println(e);
         }
     }
+    private static String convertListToString(List<Student> students) {
+        // You can use a library like Jackson or Gson for a more robust conversion
+        // Here's a simple example using toString() method of each Student
+        StringBuilder stringBuilder = new StringBuilder();
 
+        for (Student student : students) {
+            stringBuilder.append(student.toString()).append(",");
+        }
+
+        return stringBuilder.toString();
+    }
+    private  static byte[] combineMatrixAndSignature(byte[] matrix, byte[] signature) {
+        // Combine the matrix and signature as needed
+        // For simplicity, you can concatenate them, but in practice, use a proper format.
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            outputStream.write(matrix);
+            outputStream.write(signature);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return outputStream.toByteArray();
+    }
+
+    private static void SendStudentsMarks(ObjectOutputStream objectOutputStream,List<Student> stuList) throws Exception{
+        System.out.println("is prof"+!StudentDaoImpl.isStudent(username));
+        if (!StudentDaoImpl.isStudent(username)){
+        objectOutputStream.writeObject(stuList);
+        objectOutputStream.flush();
+        System.out.println("Marks List sent to the server.");
+    }}
+
+    private static void SignaturByteList(ObjectOutputStream objectOutputStream,byte[] listByte) throws Exception{
+        System.out.println("is prof--"+!StudentDaoImpl.isStudent(username));
+        if (!StudentDaoImpl.isStudent(username)){
+            objectOutputStream.writeObject(listByte);
+            objectOutputStream.flush();
+            System.out.println("sinature List sent to the server.");
+        }}
     private static void sendList(ObjectOutputStream objectOutputStream) throws Exception {
 
         if (!StudentDaoImpl.isStudent(username)) return;
-
         Scanner scanner = new Scanner(System.in);
         System.out.println("Now, Please enter you projects number : ");
         int n = scanner.nextInt();
@@ -221,226 +324,5 @@ public class TCPClient {
 //            PrettyGoodPrivacy.storePublicKeyToFile(serverPublicKey, "");
         return serverPublicKey;
 
-    }
-
-   /* private static void processProfessor(PrintWriter out, Scanner scanner) {
-        try {
-            System.out.println("Welcome Professor:\n" +
-                    "1. LogIn\n" +
-                    "2. SignIn");
-
-            answer = scanner.next();
-            System.out.println("Entering " + answer);
-
-            switch (answer){
-                case "1":
-                    System.out.println("LogIn Start...");
-                    out.println("LogIn");
-                    break;
-                case "2":
-                    System.out.println("SignIn Start...");
-                    out.println("SignIn");
-            }
-
-
-            processCommonUserDetails(out, scanner);
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-    }*/
-
-    /*private static void processStudent(PrintWriter out, Scanner scanner) {
-        try {
-            System.out.println("Welcome Student:\n" +
-                    "1. LogIn\n" +
-                    "2. SignIn");
-
-            answer = scanner.next();
-            System.out.println("Entering " + answer);
-
-            switch (answer){
-                case "1":
-                    System.out.println("LogIn Start...");
-                    out.println("LogIn");
-                    break;
-                case "2":
-                    System.out.println("SignIn Start...");
-                    out.println("SignIn");
-            }
-//            global_variable.Request_Type = "SignIn";
-
-            processCommonUserDetails(out, scanner);
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-    }
-*/
-    /*private static void processCommonUserDetails(PrintWriter out, Scanner scanner) {
-        String name;
-        int password;
-
-        System.out.println("Enter your name");
-        name = scanner.next();
-        System.out.println("Your name: " + name);
-        out.println(name);
-
-        System.out.println("Enter your password");
-        password = scanner.nextInt();
-        out.println(password);
-        System.out.println("Your password: " + password);
-
-        getClientDetails(out);
-
-        out.flush();
-    }*/
-
-    /*private static void getClientDetails(PrintWriter out) {
-        out.println(clientIPAddress);
-        out.println(clientPortNumber);
-    }*/
-}
-
-/*public class TCPClient {
-    static String answer="";
-    static String ClientIPAddress;
-    static  int ClientPortNumber;
-//    static global_variable global_variable;
-    public static void main(String[] args) throws Exception {
-        Scanner scanner= new Scanner(System.in);
-        try{
-            Socket socket=new Socket("127.0.0.1",8888);
-//           DataInputStream inStream=new DataInputStream(socket.getInputStream());
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            ClientIPAddress = socket.getLocalAddress().getHostAddress();
-            ClientPortNumber = socket.getLocalPort();
-            System.out.println("IP Address :"+ ClientIPAddress+"port num:    "+ClientPortNumber);
-            BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
-            String clientMessage="",serverMessage="";
-            System.out.println("Enter your role in this SYSTEM! :"
-                    +"\n"+"Enter 1 if your are Professor"  +
-                    "\n"+"\"Enter 2 if your are Student");
-
-            clientMessage=br.readLine();
-            System.out.println("user Entered for role"+clientMessage);
-
-            if(clientMessage.equals("1")){
-                System.out.println("Welcome Professor :"
-                        +"\n"+"Enter 1 if you want to logIn please"  +
-                        "\n"+"\"Don't have an account? Enter 2 to signIn");
-                answer=scanner.next();
-                System.out.println("entering"+clientMessage + "---" + answer);
-
-            }
-            if(clientMessage.equals("2")){
-                System.out.println("Welcome Student :"
-                        +"\n"+"Enter 1 if you want to logIn please"  +
-                        "\n"+"\"Don't have an account? Enter 2 to signIn");
-                answer=scanner.next();
-                System.out.println("entering"+clientMessage + "---" + answer);
-            }
-            String name="";
-            int password=0;
-
-
-            int id=0;
-
-            switch (answer){
-                case "1":
-                    System.out.println("logIn Start...");
-                    out.println("LogIn");
-                    System.out.println("Enter your name");
-                    name=scanner.next();
-                    System.out.println(" your name"+name);
-                    out.println(name);
-                    System.out.println("Enter your password");
-                    password=scanner.nextInt();
-                    out.println(password);
-                    System.out.println(" your pass"+password);
-                    out.println(ClientIPAddress);
-                    out.println(ClientPortNumber);
-                    break;
-                case "2":
-                    System.out.println("signIn Start...");
-                    out.println("SignIn");
-                    global_variable.Request_Type="SignIn";
-//                        signImForm.signIn(name,password,id);
-                    System.out.println("Enter your real name ");
-                    name=scanner.next();
-                    out.println(name);
-                    System.out.println(" real name :" +"\t" + name);
-
-                    System.out.println("Enter your password");
-                    password=scanner.nextInt();
-                    out.println(password);
-                    System.out.println("  pass :" +"\t" + password);
-
-                    System.out.println("Enter your ID ");
-                    id=scanner.nextInt();
-
-                    out.println(ClientIPAddress);
-                    out.println(ClientPortNumber);
-                    break;
-                default:
-                    System.out.println("unexpected answer !");
-                    break;
-
-            }
-            String server_msg= in.readLine();
-            System.out.println("server response :" + server_msg);
-
-            out.close();
-            socket.close();
-        }catch(Exception e){
-            System.out.println(e);
-        }
-    }
-}
-*/
-
-/////-------
-//            DataOutputStream name_stream=new DataOutputStream(socket.getOutputStream());
-//            DataOutputStream password_stream=new DataOutputStream(socket.getOutputStream());
-
-//            DataOutputStream name_logIn=new DataOutputStream(socket.getOutputStream());
-//            DataOutputStream password_logIn=new DataOutputStream(socket.getOutputStream());
-//            DataOutputStream name_signIn=new DataOutputStream(socket.getOutputStream());
-//            DataOutputStream password_signIn=new DataOutputStream(socket.getOutputStream());
-//            DataOutputStream ID=new DataOutputStream(socket.getOutputStream());
-
-//            else{
-//                System.out.println("unexpected answer please re-read our message!");
-//            }
-//            String user_name_logIn="";
-//            String user_name_signIn="";
-
-//            int user_password_logIn=0;
-//            int user_password_signIn=0;
-
-
-//////-----
-//            name_stream.writeUTF(name);
-//            password_stream.writeUTF(String.valueOf(password));
-
-//            name_stream.flush();
-//            name_stream.close();
-
-          /*  name_logIn.writeUTF(user_name_logIn);
-            password_logIn.writeUTF(String.valueOf(user_password_logIn));
-            name_signIn.writeUTF(user_name_signIn);
-            password_signIn.writeUTF(String.valueOf(user_password_signIn));*/
-//            ID.writeUTF(String.valueOf(id));
-            /*name_logIn.flush();
-            password_logIn.flush();
-            name_signIn.flush();*/
-//            ID.flush();
-//            password_signIn.flush();
-//            serverMessage=inStream.readUTF();
-//            System.out.println(serverMessage);
-
-//            password_logIn.close();
-//            name_logIn.close();
-//            name_signIn.close();
-//            password_signIn.close();
-//            ID.close();
+    }}
 

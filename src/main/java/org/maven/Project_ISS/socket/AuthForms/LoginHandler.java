@@ -3,6 +3,7 @@ package org.maven.Project_ISS.socket.AuthForms;
 
 import org.maven.Project_ISS.dao.ProfessorDao;
 import org.maven.Project_ISS.dao.StudentDao;
+import org.maven.Project_ISS.socket.ServerClientThread;
 import org.maven.Project_ISS.socket.TCPClient;
 
 import java.io.PrintWriter;
@@ -25,9 +26,15 @@ public class LoginHandler {
         boolean isStudentExist = studentDao.exist_account(name,password);
         boolean isProfExist = professorDao.exist_account(name,password);
 
-        if (isStudentExist || isProfExist) {
+        if (isStudentExist) {
+            ServerClientThread.client_type=2;
             out.println("Welcome to our System, " + name);
-        } else {
+        }
+        else if(isProfExist){
+            ServerClientThread.client_type=1;
+            out.println("Welcome to our System, " + name);
+        }
+        else {
             System.out.println("Client: Failed to log in with name: " + name +
                     ". This name doesn't exist in our records.");
             out.println("Sorry! This name {" + name + "} doesn't exist in our records");

@@ -1,4 +1,5 @@
 package org.maven.Project_ISS.socket.ClientComponents;
+import org.maven.Project_ISS.DigitalSignature.StudentMarks;
 import org.maven.Project_ISS.socket.TCPClient;
 
 import java.io.BufferedReader;

@@ -1,6 +1,10 @@
 package org.maven.Project_ISS.socket;
 
 import org.maven.Project_ISS.AES.AsymmetricEncryption;
+//import org.maven.Project_ISS.DigitalSignature.DSA;
+//import org.maven.Project_ISS.DigitalSignature.DigitalSignatureExample;
+import org.maven.Project_ISS.DigitalSignature.DSA;
+import org.maven.Project_ISS.DigitalSignature.StudentMarks;
 import org.maven.Project_ISS.PGoodP.PrettyGoodPrivacy;
 import org.maven.Project_ISS.dao.*;
 import org.maven.Project_ISS.socket.AuthForms.LoginHandler;
@@ -13,14 +17,18 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 
 public class ServerClientThread extends Thread {
+    public static int client_type;
     private final Socket serverClient;
     private String sessionKey;
     private final int clientNo;
 
     private static String username;
+    public static boolean testforsign=false;
 
     public ServerClientThread(Socket inSocket, int counter) {
         serverClient = inSocket;
@@ -34,10 +42,9 @@ public class ServerClientThread extends Thread {
             BufferedReader in = new BufferedReader(new InputStreamReader(serverClient.getInputStream()));
             PrintWriter out = new PrintWriter(serverClient.getOutputStream(), true);
             ObjectInputStream objectInputStream = new ObjectInputStream(serverClient.getInputStream());
-
-            // Read client request
+            DSA dsa=new DSA();            // Read client request
             String request = in.readLine();
-
+            StudentMarks studentMarks = new StudentMarks();
             System.out.println("Request: " + request);
 
 
@@ -125,21 +132,79 @@ public class ServerClientThread extends Thread {
             String serverMessage = "The session key has been received";
             serverMessage = AsymmetricEncryption.encrypt(serverMessage, sessionkey);
             out.println(serverMessage);
-
-            //receive Projects list from student
-            List<String> projectsListEncoded = (List<String>) objectInputStream.readObject();
-            List<String> projectList = new ArrayList<>();
-            for (int i = 0; i < projectsListEncoded.size(); i++) {
-                String project = AsymmetricEncryption.decrypt(projectsListEncoded.get(i), sessionkey);
-                projectList.add(project);
-                System.out.println("Project number " + (i + 1) + " : " + projectsListEncoded.get(i));
-                System.out.println("Project number " + (i + 1) + " : " + project);
+//-----------------
+            if(client_type==1) {
+               String publicKeyString = professorDao.get_publicKey(username);
+               PublicKey publicKey= PrettyGoodPrivacy.convertStringToPublicKey(publicKeyString);
+                System.out.println("publicKey"+publicKey);
+                List<org.maven.Project_ISS.DigitalSignature.Student> MarksListEncoded =
+                        (List<org.maven.Project_ISS.DigitalSignature.Student>) objectInputStream.readObject();
+                System.out.println("array");
+                studentMarks.getStudentsWithMarks(MarksListEncoded);
+                System.out.println("array");
+                byte[] receivedSignatureByteList =(byte[]) objectInputStream.readObject();
+                dsa.verifySignature(MarksListEncoded.toString().getBytes(),receivedSignatureByteList,publicKey);
+                String receivedMessage = "Dear prof , " + username + " , your file have been received";
+                System.out.println("signature arr"+Arrays.toString(receivedSignatureByteList));
+                System.out.println("serializedMatrix arr"+Arrays.toString(MarksListEncoded.toString().getBytes()));    System.out.println("verfication state : " + dsa.verifySignature(MarksListEncoded.toString().getBytes(),receivedSignatureByteList,publicKey));
+                System.out.println("receivedMessage : " + receivedMessage);
             }
-            String receivedMessage = "Dear student , " + username + " , your project has been received";
-            out.println(AsymmetricEncryption.encrypt(receivedMessage, sessionkey));
-            System.out.println("receivedMessage : " + receivedMessage);
+            //-----------------
+            if(client_type==2) {
+                //receive Projects list from student
+                List<String> projectsListEncoded = (List<String>) objectInputStream.readObject();
+                List<String> projectList = new ArrayList<>();
+                for (int i = 0; i < projectsListEncoded.size(); i++) {
+                    String project = AsymmetricEncryption.decrypt(projectsListEncoded.get(i), sessionkey);
+                    projectList.add(project);
+                    System.out.println("Project number " + (i + 1) + " : " + projectsListEncoded.get(i));
+                    System.out.println("Project number " + (i + 1) + " : " + project);
+                }
+                String receivedMessage = "Dear student , " + username + " , your project has been received";
+                out.println(AsymmetricEncryption.encrypt(receivedMessage, sessionkey));
+                System.out.println("receivedMessage : " + receivedMessage);
+            }
+            //-----------------
+//            System.out.println("jjjjjj"+testforsign);
+//               byte[] message = studentMarks.getmessageByte(TCPClient.studentList);
+//               String publicKeyString = professorDao.get_publicKey(username);
+//               PublicKey publicKey= PrettyGoodPrivacy.convertStringToPublicKey(publicKeyString);
+////            DigitalSignatureExample digitalSignatureExample = new DigitalSignatureExample();
+//            System.out.println("isEnt"+TCPClient.isEntered);
+////            if(TCPClient.isEntered){
+//               System.out.println("enter condition");
+//               ////
+//            String receivedString = in.readLine();
+//
+//            String signature = in.readLine();
+//               byte[] receivedSignature = Base64.getDecoder().decode(signature);
+             // Receive the string from the client
 
+            // Convert the string back to List<Student>
+           /* List<org.maven.Project_ISS.DigitalSignature.Student> receivedStudents = convertStringToList(receivedString);
 
+// Now 'receivedStudents' contains the List<Student> sent from the client               System.out.println("receivedSignature arr"+ Arrays.toString(receivedSignature));
+               System.out.println("studentMarks.getmessageByte(TCPClient.studentList)"+ Arrays.toString(message));
+               System.out.println( "publicKey"+publicKey);
+               System.out.println( "String signature"+signature);
+            System.out.println("listtttttt");
+            studentMarks.getStudentsWithMarks(receivedStudents);
+//               System.out.println("test for validation return"+dsa.validateProfMessageSignature(publicKey,receivedSignature));
+               if(dsa.verifySignature(receivedStudents.toString().getBytes(),receivedSignature,publicKey)
+
+               ){
+                   System.out.println("trueeee");
+
+                   out.println("Your Signature is Valid so Your CONNECTION is secured!");
+               }
+               else{
+                   out.println("Your Signature is NOT Valid!");
+               }
+//           */
+//            System.out.println("verifySignature----"+dsa.verifySignature(receivedStudents.toString().getBytes(),receivedSignature,publicKey) );
+
+//            }
+     
 
 
            /* out.close();
@@ -152,7 +217,32 @@ public class ServerClientThread extends Thread {
             System.out.println("Client - " + clientNo + " exit!!");
         }
     }
+    private static List<org.maven.Project_ISS.DigitalSignature.Student> convertStringToList(String studentsString) {
+        List<org.maven.Project_ISS.DigitalSignature.Student> students = new ArrayList<>();
 
+        // Assuming the string is comma-separated, you can split it
+        String[] studentArray = studentsString.split(",");
+
+        // Iterate through each studentInfo in the array
+        for (String studentInfo : studentArray) {
+            // Assuming each studentInfo is formatted as "Name:Marks"
+            String[] parts = studentInfo.split(":");
+
+            if (parts.length == 2) {
+                // Extract name and marks, then create a Student object
+                String name = parts[0];
+                int marks = Integer.parseInt(parts[1]);
+
+                org.maven.Project_ISS.DigitalSignature.Student student = new org.maven.Project_ISS.DigitalSignature.Student(name, marks);
+                students.add(student);
+            } else {
+                // Handle incorrect format if needed
+                System.out.println("Invalid format for studentInfo: " + studentInfo);
+            }
+        }
+
+        return students;
+    }
     private static void addingPublicKeyToDB(PublicKey publicKey) {
 
         StudentDao studentDao = new StudentDaoImpl();
@@ -190,98 +280,3 @@ public class ServerClientThread extends Thread {
     }
 
 }
-/*
-import org.maven.Project_ISS.dao.ProfessorDao;
-import org.maven.Project_ISS.dao.ProfessorDaoImpl;
-import org.maven.Project_ISS.dao.StudentDao;
-import org.maven.Project_ISS.dao.StudentDaoImpl;
-
-import java.io.*;
-import java.net.Socket;
-
-public class ServerClientThread extends Thread {
-    Socket serverClient;
-    int clientNo;
-     static global_variable global_variable;
-    ServerClientThread(Socket inSocket,int counter){
-        serverClient = inSocket;
-        clientNo=counter;
-    }
-//    DataOutputStream outStream;
-    public void run(){
-        try{
-            StudentDao studentDao = new StudentDaoImpl();
-            ProfessorDao professorDao = new ProfessorDaoImpl();
-            boolean is_student_exist ;
-            boolean is_prof_exist ;
-//           DataOutputStream outStream = new DataOutputStream(serverClient.getOutputStream());
-            // provides sending different types of primitive data to the clients
-//            String clientMessage="", serverMessage="";
-            BufferedReader in = new BufferedReader(new InputStreamReader(serverClient.getInputStream()));
-            PrintWriter out = new PrintWriter(serverClient.getOutputStream(), true);
-
-            // Read client request
-            String request = in.readLine();
-            System.out.println("request"+ "\t"+request);
-            String name =in.readLine();
-            System.out.println("name :"+name);
-            int password =Integer.parseInt(in.readLine());
-            System.out.println("pass:"+password);
-            String IPAddress = in.readLine();
-            int PortNumber =Integer.parseInt(in.readLine());
-
-            ///handling clients request
-            //----------------LogIn Request----------
-            if(request.contains("LogIn")){
-            System.out.println("client logged in"+  "\t"+"called" + "\t"+name+ "\t"+ "With IP Address : " +IPAddress
-                    + "\t" + "and Port number =" + PortNumber);
-            //--------------------------
-            is_student_exist=  studentDao.exist(name);
-            is_prof_exist = professorDao.exist(name);
-            //-----------------------
-            if(is_student_exist || is_prof_exist){
-            System.out.println("From Client-"+  "\t" + clientNo + "\t" +  ": name  :" + "\t" + name +"\n"+
-                    "password" +  "\t" + + password);
-//                serverMessage="Welcome to our System";
-            out.println("Welcome to our System"+ "\t" + name);
-    }
-    else{
-        System.out.println("Client-"  + "\t" + +clientNo + "\t" + "with name:"  + "\t" +name + " Failed to logIn.."
-        + "\n" + "This name Doesn't exist in our records ");
-                out.println("Sorry! This name" + "\t {" +name + "\t }" +"Doesn't exist in our records");
-//        serverMessage =" Sorry! This name Doesn't exist in our records" ;
-            }}
-            //----------------SignIn Request----------
-
-            if(request.contains("SignIn")){
-                is_student_exist=  studentDao.exist(name);
-                is_prof_exist = professorDao.exist(name);
-                if(is_student_exist || is_prof_exist){
-                    System.out.println("From Client-"+  "\t" + clientNo + "\t" +  ": name  :" + "\t" + name +"\n"+
-                            "password" +  "\t" + + password);
-//                serverMessage="Welcome to our System";
-                    out.println("Your SignIn Have Done Successfully: Welcome!"+ "\t" + name);
-                    System.out.println("SignIn Done!");
-       }}
-//               outStream.writeUTF(serverMessage);
-//               outStream.flush();
-            out.flush();
-            in.close();
-            out.close();
-//            outStream.close();
-            serverClient.close();
-
-               }
-        catch(Exception ex){
-               System.out.println(ex); }
-
-        finally{
-           System.out.println("Client -" + clientNo + " exit!! ");
-        }
-
-    }}*/
-//////////////////
-// obtaining input and out streams to communicate with the connected clients
-//        DataInputStream inStream = new DataInputStream(serverClient.getInputStream());
-//getInputStream provides reading different types of primitive data
-//to read what clients send to server

@@ -21,6 +21,7 @@ public class LoginHandler {
 
     public void handleLogin(String name, String password) {
         TCPClient.username=name;
+        String isLogged;
         System.out.println("Client logged in: " + name);
 
         boolean isStudentExist = studentDao.exist_account(name,password);
@@ -28,16 +29,26 @@ public class LoginHandler {
 
         if (isStudentExist) {
             ServerClientThread.client_type=2;
+            TCPClient.isEntered=true;
+            isLogged="true";
+//            out.println(isLogged);
             out.println("Welcome to our System, " + name);
         }
         else if(isProfExist){
+            TCPClient.isEntered=true;
+            isLogged="true";
             ServerClientThread.client_type=1;
+//            out.println(isLogged);
             out.println("Welcome to our System, " + name);
         }
         else {
+            isLogged="false";
+            TCPClient.isEntered=false;
             System.out.println("Client: Failed to log in with name: " + name +
                     ". This name doesn't exist in our records.");
-            out.println("Sorry! This name {" + name + "} doesn't exist in our records");
+//            out.println(isLogged);
+            out.println("Sorry! incorrect NAME {" + name + "} or incorrect PASSWORD");
+
         }
     }
 }

@@ -31,7 +31,7 @@ public class commonDetails {
         System.out.println("Your password: " + password);
 
         getClientDetails(out,clientIPAddress,clientPortNumber);
-
+        TCPClient.isEntered=true;
         out.flush();
     }
 
@@ -58,6 +58,7 @@ public class commonDetails {
         System.out.println("Your password: " + password);
 
         getClientDetails(out,clientIPAddress,clientPortNumber);
+        TCPClient.isEntered=true;
 
         out.flush();
     }
@@ -81,7 +82,7 @@ public class commonDetails {
         out.println(password);
         System.out.println("Your password: " + password);
         getClientDetails(out,clientIPAddress,clientPortNumber);
-
+        TCPClient.isEntered=true;
         out.flush();
     }
 

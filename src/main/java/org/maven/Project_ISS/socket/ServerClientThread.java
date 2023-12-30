@@ -140,12 +140,18 @@ public class ServerClientThread extends Thread {
                String publicKeyString = professorDao.get_publicKey(username);
                PublicKey publicKey= PrettyGoodPrivacy.convertStringToPublicKey(publicKeyString);
                 System.out.println("Client publicKey"+publicKey);
-                List<StudentInfo> ReceivedMarksList=
+                List<StudentInfo> DecodedMarksList= new ArrayList<StudentInfo>();
+//                ------ NOT USED!
+                        List<StudentInfo> ReceivedMarksList=
                         (List<StudentInfo>) objectInputStream.readObject();
-                byte[] serializedMatrixFrimClient =(byte[]) objectInputStream.readObject();
+//                ------ NOT USED!
+// Variables TO BE STORED in DB----------------------------------------
+                byte[] serializedMatrixFrimClient =(byte[]) objectInputStream.readObject();//1) Byte Array of Marks List
+             DecodedMarksList=studentMarks.convertBytesToList(serializedMatrixFrimClient);//2) convert byte arr into list<StudentInfo>
                 System.out.println("ReceivedMarksList");
-                studentMarks.getStudentsWithMarks(ReceivedMarksList);
-                byte[] receivedSignatureByteList =(byte[]) objectInputStream.readObject();
+                studentMarks.getStudentsWithMarks(DecodedMarksList);
+                byte[] receivedSignatureByteList =(byte[]) objectInputStream.readObject();//3) signature byte arr
+                //verification of signature
                 dsa.verifySignature(serializedMatrixFrimClient,receivedSignatureByteList,publicKey);
                 if ( dsa.verifySignature(serializedMatrixFrimClient,receivedSignatureByteList,publicKey)) {
                     System.out.println("Professor Signature is VALID!.");
@@ -155,6 +161,8 @@ public class ServerClientThread extends Thread {
                 }
 
             }
+// Variables TO BE STORED in DB----------------------------------------
+
             //-----------------
             if(client_type==2) {
                 //receive Projects list from student

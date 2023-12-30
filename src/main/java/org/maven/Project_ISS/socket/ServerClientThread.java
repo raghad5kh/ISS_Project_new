@@ -4,6 +4,7 @@ import org.maven.Project_ISS.AES.AsymmetricEncryption;
 //import org.maven.Project_ISS.DigitalSignature.DSA;
 //import org.maven.Project_ISS.DigitalSignature.DigitalSignatureExample;
 import org.maven.Project_ISS.DigitalSignature.DSA;
+import org.maven.Project_ISS.DigitalSignature.StudentInfo;
 import org.maven.Project_ISS.DigitalSignature.StudentMarks;
 import org.maven.Project_ISS.PGoodP.PrettyGoodPrivacy;
 import org.maven.Project_ISS.dao.*;
@@ -134,21 +135,34 @@ public class ServerClientThread extends Thread {
             out.println(serverMessage);
 //-----------------
             if(client_type==1) {
+                String receivedMessage = "Dear prof , " + username + " , your signed file have been received";
+                //Professor
                String publicKeyString = professorDao.get_publicKey(username);
                PublicKey publicKey= PrettyGoodPrivacy.convertStringToPublicKey(publicKeyString);
-                System.out.println("publicKey"+publicKey);
-                List<org.maven.Project_ISS.DigitalSignature.Student> MarksListEncoded =
-                        (List<org.maven.Project_ISS.DigitalSignature.Student>) objectInputStream.readObject();
-                System.out.println("array");
-                studentMarks.getStudentsWithMarks(MarksListEncoded);
-                System.out.println("array");
-                byte[] receivedSignatureByteList =(byte[]) objectInputStream.readObject();
-                dsa.verifySignature(MarksListEncoded.toString().getBytes(),receivedSignatureByteList,publicKey);
-                String receivedMessage = "Dear prof , " + username + " , your file have been received";
-                System.out.println("signature arr"+Arrays.toString(receivedSignatureByteList));
-                System.out.println("serializedMatrix arr"+Arrays.toString(MarksListEncoded.toString().getBytes()));    System.out.println("verfication state : " + dsa.verifySignature(MarksListEncoded.toString().getBytes(),receivedSignatureByteList,publicKey));
-                System.out.println("receivedMessage : " + receivedMessage);
+                System.out.println("Client publicKey"+publicKey);
+                List<StudentInfo> DecodedMarksList= new ArrayList<StudentInfo>();
+//                ------ NOT USED!
+                        List<StudentInfo> ReceivedMarksList=
+                        (List<StudentInfo>) objectInputStream.readObject();
+//                ------ NOT USED!
+// Variables TO BE STORED in DB----------------------------------------
+                byte[] serializedMatrixFrimClient =(byte[]) objectInputStream.readObject();//1) Byte Array of Marks List
+             DecodedMarksList=studentMarks.convertBytesToList(serializedMatrixFrimClient);//2) convert byte arr into list<StudentInfo>
+                System.out.println("ReceivedMarksList");
+                studentMarks.getStudentsWithMarks(DecodedMarksList);
+                byte[] receivedSignatureByteList =(byte[]) objectInputStream.readObject();//3) signature byte arr
+                //verification of signature
+                dsa.verifySignature(serializedMatrixFrimClient,receivedSignatureByteList,publicKey);
+                if ( dsa.verifySignature(serializedMatrixFrimClient,receivedSignatureByteList,publicKey)) {
+                    System.out.println("Professor Signature is VALID!.");
+                    out.println(receivedMessage);
+                } else {
+                    System.err.println("It is not possible to validate the signature.");
+                }
+
             }
+// Variables TO BE STORED in DB----------------------------------------
+
             //-----------------
             if(client_type==2) {
                 //receive Projects list from student
@@ -217,8 +231,8 @@ public class ServerClientThread extends Thread {
             System.out.println("Client - " + clientNo + " exit!!");
         }
     }
-    private static List<org.maven.Project_ISS.DigitalSignature.Student> convertStringToList(String studentsString) {
-        List<org.maven.Project_ISS.DigitalSignature.Student> students = new ArrayList<>();
+    private static List<StudentInfo> convertStringToList(String studentsString) {
+        List<StudentInfo> students = new ArrayList<>();
 
         // Assuming the string is comma-separated, you can split it
         String[] studentArray = studentsString.split(",");
@@ -233,7 +247,7 @@ public class ServerClientThread extends Thread {
                 String name = parts[0];
                 int marks = Integer.parseInt(parts[1]);
 
-                org.maven.Project_ISS.DigitalSignature.Student student = new org.maven.Project_ISS.DigitalSignature.Student(name, marks);
+                org.maven.Project_ISS.DigitalSignature.StudentInfo student = new StudentInfo(name, marks);
                 students.add(student);
             } else {
                 // Handle incorrect format if needed

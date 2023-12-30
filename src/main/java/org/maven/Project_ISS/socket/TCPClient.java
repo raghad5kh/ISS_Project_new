@@ -1,6 +1,8 @@
 package org.maven.Project_ISS.socket;
 
+import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.maven.Project_ISS.AES.AsymmetricEncryption;
+import org.maven.Project_ISS.CSR.CSRGenerator;
 import org.maven.Project_ISS.DigitalSignature.DSA;
 //import org.maven.Project_ISS.DigitalSignature.DigitalSignatureExample;
 import org.maven.Project_ISS.DigitalSignature.StudentInfo;
@@ -15,13 +17,18 @@ import org.maven.Project_ISS.socket.ClientComponents.ProfessorClient;
 import org.maven.Project_ISS.socket.ClientComponents.StudentClient;
 import org.maven.Project_ISS.socket.ClientComponents.UserInfo;
 import org.maven.Project_ISS.socket.ClientComponents.commonDetails;
-
+import org.bouncycastle.pkcs.PKCS10CertificationRequest;
+import org.maven.Project_ISS.AES.AsymmetricEncryption;
+import org.maven.Project_ISS.DCA.DCA;
 import java.io.*;
 import java.lang.reflect.Array;
 import java.net.Socket;
 import java.security.KeyFactory;
+import java.security.KeyPair;
 import java.security.PublicKey;
 import java.security.PrivateKey;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.*;
@@ -42,6 +49,7 @@ public class TCPClient {
     static commonDetails commonDetails = new commonDetails();
 
     public static String username;
+    public static String PS;
     static UserInfo userInfo = new UserInfo();
 
     private static String sessionKey;
@@ -163,6 +171,9 @@ public class TCPClient {
                         SendStudentsMarks(objectOutputStream, studentsWithMarks);
                         SignaturByteList(objectOutputStream, serializedMatrix);
                         SignaturByteList(objectOutputStream, signature);
+                        String ok1 = in.readLine();
+                        System.out.println("Server response: " + ok1);
+
                         //----------------------------------
 //                    }
                 }
@@ -172,15 +183,46 @@ public class TCPClient {
 //                }
 
                 //send list of student's project
-                sendList(objectOutputStream);
+
 
                 if (clientMessage.equals("2")) {
+                    sendList(objectOutputStream);
                     //recieve ok message
                     String ok = in.readLine();
                     System.out.println("received Message : " + AsymmetricEncryption.decrypt(ok, sessionkey));
                 }
 
+                if(clientMessage.equals("1")) {
+                    if (type == 2) {
 
+                        sendCSR(id_number, username, PS, publicKeyPath, privateKeyPath, out);
+
+
+                        out.println("");
+                        String ok1 = in.readLine();
+                        System.out.println("Server response: " + ok1);
+                        String equation = in.readLine();
+                        System.out.println(equation);
+                        System.out.print("Enter your solution for x: ");
+                        String userSolution = String.valueOf(scanner.nextInt());
+                        out.println(userSolution);
+                        String isCorrect = in.readLine();
+                        if (isCorrect.equals("true")) {
+                            String digital_certificate = in.readLine();
+                            System.out.println("digital_certificate\n" + digital_certificate);
+                            byte[] decodedBytes = Base64.getDecoder().decode(digital_certificate);
+                            CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+                            X509Certificate certificate = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(decodedBytes));
+                            System.out.println("certificate" + certificate);
+                            DCA.saveCertificate("dsa\\client\\digital" + id_number + "certificate.cer", certificate);
+
+                        } else {
+                            String error = in.readLine();
+                            System.out.println("Server response: " + error);
+                        }
+                    }
+
+                }
             }
       /*      in.close();
             out.close();
@@ -204,6 +246,43 @@ public class TCPClient {
             objectOutputStream.flush();
             System.out.println("sinature List sent to the server.");
         }}
+    private static void sendCSR(int id_number,String name,String passwordd,String publickeypath,String privatekeypath,PrintWriter out) throws Exception{
+        System.out.println("Now, send CSR to sever : ");
+        try {
+            PublicKey publicKey= PrettyGoodPrivacy.readPublicKeyFromFile(publickeypath);
+            PrivateKey privateKey= PrettyGoodPrivacy.readPrivateKeyFromFile(privatekeypath);
+            KeyPair keyPair = CSRGenerator.createKeyPairFromKeyBytes(privateKey,publicKey);
+
+            ProfessorDao professorDao =new ProfessorDaoImpl();
+            String pro_info = professorDao.get_info(username);
+            String[] parts = pro_info.split(",");
+            String address = parts[0].trim().replace("Address:", "");
+            String phoneNumber = parts[1].trim().replace("Phone Number:", "");
+            String mobileNumber = parts[2].trim().replace("Mobile Number:", "");
+
+            String Name = name;
+            String Id_number = String.valueOf(id_number);
+            String password = passwordd;
+            String pro_address = address;
+            String pro_phoneNumber = phoneNumber;
+            String pro_mobileNumber = mobileNumber;
+
+            PKCS10CertificationRequest csr = CSRGenerator.generateCSR(
+                    keyPair, Name, Id_number, password, pro_address, pro_phoneNumber, pro_mobileNumber);
+
+
+            String csrPEM = CSRGenerator.convertToPEM(csr);
+            // System.out.println("Generated CSR:\n" + csrPEM);
+            out.println(csrPEM);
+
+
+
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     private static void sendList(ObjectOutputStream objectOutputStream) throws Exception {
 
         if (!StudentDaoImpl.isStudent(username)) return;

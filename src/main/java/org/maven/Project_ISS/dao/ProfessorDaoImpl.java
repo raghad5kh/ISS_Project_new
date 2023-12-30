@@ -264,5 +264,37 @@ public class ProfessorDaoImpl implements ProfessorDao {
         }
         return 0;
     }
+
+    @Override
+    public String get_info(String username) {
+        try (Connection con = DBConnection.getConnection()) {
+            if (con == null) {
+                return null;
+            }
+
+            String query = "SELECT address, phone_number, mobile_number FROM professor WHERE username = ?;";
+            try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+                preparedStatement.setString(1, username);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+
+                        String address = resultSet.getString("address");
+                        String phoneNumber = resultSet.getString("phone_number");
+                        String mobileNumber = resultSet.getString("mobile_number");
+
+                        return "Address: " + address + ", Phone Number: " + phoneNumber + ", Mobile Number: " + mobileNumber;
+                    } else {
+                        return null;
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
 

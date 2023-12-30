@@ -3,6 +3,8 @@ package org.maven.Project_ISS.socket;
 import org.maven.Project_ISS.AES.AsymmetricEncryption;
 //import org.maven.Project_ISS.DigitalSignature.DSA;
 //import org.maven.Project_ISS.DigitalSignature.DigitalSignatureExample;
+import org.maven.Project_ISS.CSR.CSRGenerator;
+import org.maven.Project_ISS.DCA.DCA;
 import org.maven.Project_ISS.DigitalSignature.DSA;
 import org.maven.Project_ISS.DigitalSignature.StudentInfo;
 import org.maven.Project_ISS.DigitalSignature.StudentMarks;
@@ -16,7 +18,10 @@ import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.security.KeyPair;
+import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -177,6 +182,67 @@ public class ServerClientThread extends Thread {
                 String receivedMessage = "Dear student , " + username + " , your project has been received";
                 out.println(AsymmetricEncryption.encrypt(receivedMessage, sessionkey));
                 System.out.println("receivedMessage : " + receivedMessage);
+            }
+
+            if (client_type == 1){
+                StringBuilder csrBuilder = new StringBuilder();
+                String line;
+
+                while (!(line = in.readLine()).equals("")) {
+                    //  System.out.println(line);
+                    csrBuilder.append(line).append("\n");
+                }
+                String generatedCSR = csrBuilder.toString();
+                System.out.println("receive CSR:");
+                System.out.println(generatedCSR);
+                PublicKey publicKey = CSRGenerator.extractPublicKeyFromCSR(generatedCSR);
+                String publicKey_fromDB = professorDao.get_publicKey(username);
+                PublicKey publicKey_pro = PrettyGoodPrivacy.convertStringToPublicKey(publicKey_fromDB);
+                String name = CSRGenerator.extractNameFromCSR(generatedCSR);
+                String password = CSRGenerator.extractPasswordFromCSR(generatedCSR);
+                if(publicKey.equals(publicKey_pro)|| professorDao.exist_account(name,password)) {
+                    out.println("Received CSR without errors");
+                }
+                else {
+                    out.println("There are errors in the information");
+                }
+
+
+                int a = (int) (Math.random() * 10) + 1;
+                int b = (int) (Math.random() * 10) + 1;
+                int c = a * 5 + b;
+
+                String equation = a + "x + " + b + " = " + c;
+                out.println(equation);
+                String test = in.readLine();
+                int solution = Integer.parseInt(in.readLine());
+                System.out.println("solution:" + solution);
+                int correctSolution = (c - b) / a;
+                String isCorrect ;
+                if (solution == correctSolution) {
+                    isCorrect ="true";
+                    out.println(isCorrect);
+                    System.out.println("client solution is correct.");
+                    PublicKey publicKey_server= PrettyGoodPrivacy.readPublicKeyFromFile("keys\\server\\puSPerVerlic.txt");
+                    PrivateKey privateKey_server = PrettyGoodPrivacy.readPrivateKeyFromFile("keys\\server\\priSVerVerate.txt");
+                    KeyPair keyPair = DCA.createKeyPairFromKeyBytes(privateKey_server,publicKey_server);
+                    X509Certificate digitalCertificate = DCA.generateDigitalCertificate(keyPair,username);
+                    System.out.println("digitalCertificate"+digitalCertificate);
+                    String certString = Base64.getEncoder().encodeToString(digitalCertificate.getEncoded());
+                    String signature = DCA.sign(certString, keyPair.getPrivate());
+                    System.out.println("Signature: " + signature);
+                    boolean isVerified = DCA.verify(certString, signature, keyPair.getPublic());
+                    System.out.println("Verification result: " + isVerified);
+                    if (isVerified){
+                    out.println(certString);}
+
+                } else {
+                    isCorrect= "false";
+                    out.println(isCorrect);
+                    System.out.println("client solution is incorrect. The correct solution is: " + correctSolution);
+                    out.println("Sorry, your solution is incorrect.");
+                }
+
             }
             //-----------------
 //            System.out.println("jjjjjj"+testforsign);

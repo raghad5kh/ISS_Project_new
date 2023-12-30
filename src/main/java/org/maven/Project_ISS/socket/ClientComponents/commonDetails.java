@@ -29,7 +29,7 @@ public class commonDetails {
         password = scanner.next();
         out.println(password);
         System.out.println("Your password: " + password);
-
+        TCPClient.PS=password;
         getClientDetails(out,clientIPAddress,clientPortNumber);
         TCPClient.isEntered=true;
         out.flush();
@@ -51,12 +51,13 @@ public class commonDetails {
         name = scanner.next();
         System.out.println("Your name: " + name);
         out.println(name);
-
+        TCPClient.username=name;
         System.out.println("Enter your password");
         password = scanner.next();
         out.println(password);
         System.out.println("Your password: " + password);
 
+        TCPClient.PS=password;
         getClientDetails(out,clientIPAddress,clientPortNumber);
         TCPClient.isEntered=true;
 

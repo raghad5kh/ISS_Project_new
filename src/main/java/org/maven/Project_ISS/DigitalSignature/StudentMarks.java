@@ -2,9 +2,7 @@ package org.maven.Project_ISS.DigitalSignature;
 
 import org.maven.Project_ISS.socket.TCPClient;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -69,6 +67,33 @@ public class StudentMarks {
         baos.close();
         // Return the byte array
         return baos.toByteArray();
+    }
+    public List<StudentInfo> convertBytesToList(byte[] byteArray) throws IOException, ClassNotFoundException {
+        // Create a ByteArrayInputStream to read the bytes
+        ByteArrayInputStream bais = new ByteArrayInputStream(byteArray);
+        // Create an ObjectInputStream to read the objects
+        ObjectInputStream ois = new ObjectInputStream(bais);
+        // Create a list to store StudentInfo objects
+        List<StudentInfo> studentList = new ArrayList<>();
+
+        try {
+            // Read objects from the input stream until the end
+            while (true) {
+                // Read the object and cast it to StudentInfo
+                StudentInfo si = (StudentInfo) ois.readObject();
+                // Add the object to the list
+                studentList.add(si);
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            // Ignore the exception that occurs when there are no more objects to read
+        } finally {
+            // Close the input streams
+            ois.close();
+            bais.close();
+        }
+
+        // Return the list of StudentInfo objects
+        return studentList;
     }
     public List<StudentInfo> EnterMarks(){
         List<StudentInfo> studentList = new ArrayList<>();

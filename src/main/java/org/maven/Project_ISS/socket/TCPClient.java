@@ -1,13 +1,12 @@
+
 package org.maven.Project_ISS.socket;
 
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.maven.Project_ISS.AES.AsymmetricEncryption;
 import org.maven.Project_ISS.CSR.CSRGenerator;
-import org.maven.Project_ISS.DigitalSignature.DSA;
+import org.maven.Project_ISS.DigitalSignature.*;
 //import org.maven.Project_ISS.DigitalSignature.DigitalSignatureExample;
 import org.maven.Project_ISS.DigitalSignature.StudentInfo;
-import org.maven.Project_ISS.DigitalSignature.StudentInfo;
-import org.maven.Project_ISS.DigitalSignature.StudentMarks;
 import org.maven.Project_ISS.PGoodP.PrettyGoodPrivacy;
 import org.maven.Project_ISS.dao.ProfessorDao;
 import org.maven.Project_ISS.dao.ProfessorDaoImpl;
@@ -42,6 +41,7 @@ public class TCPClient {
     public static  boolean isEntered;
     public static  List<StudentInfo> studentList = new ArrayList<>();
 
+    public static boolean isValid=true;
     static String clientIPAddress;
     static int clientPortNumber;
     static ProfessorClient professorClient = new ProfessorClient();
@@ -50,11 +50,9 @@ public class TCPClient {
 
     public static String username;
     public static String PS;
-    public static PublicKey serverPublicKey;
     static UserInfo userInfo = new UserInfo();
 
     private static String sessionKey;
-    public static boolean isValid=true;
 
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
@@ -93,7 +91,6 @@ public class TCPClient {
 //            String isLogged=in.readLine();
             String serverMessage = in.readLine();
             System.out.println("Server response: " + serverMessage);
-
             String compareString = "Your SignIn has been done successfully.";
 //            System.out.println("is Logged status: " + isLogged);
 //            if(isLogged.equals("true")) {
@@ -106,7 +103,7 @@ public class TCPClient {
                         return;
                     }
 
-                   String[] parts = serverMessage2.split(",");
+                    String[] parts = serverMessage2.split(",");
                     id_number = Integer.parseInt(parts[0]);
                     String name = parts[1];
                     String password = parts[2];
@@ -178,18 +175,24 @@ public class TCPClient {
                 if (clientMessage.equals("1")) {
                     //entered as Professor
 //                    if (isLogged.equals("true")) {
-                        List<StudentInfo> studentsWithMarks = studentMarks.EnterMarks();
-                        byte[] serializedMatrix = studentMarks.convertListToBytes(studentsWithMarks);
-                        byte[] signature = dsa.signMessage(serializedMatrix, privateKey);
-                        dsa.verifySignature(serializedMatrix, signature, publicKey);
-                        System.out.println("Client publicKey =" + "\t" + publicKey);
-                        SendStudentsMarks(objectOutputStream, studentsWithMarks);
-                        SignaturByteList(objectOutputStream, serializedMatrix);
-                        SignaturByteList(objectOutputStream, signature);
-                        String ok1 = in.readLine();
-                        System.out.println("Server response: " + ok1);
+                    List<StudentInfo> studentsWithMarks = studentMarks.EnterMarks();
+                    byte[] serializedMatrix = studentMarks.convertListToBytes(studentsWithMarks);
+                    byte[] signature = dsa.signMessage(serializedMatrix, privateKey);
+                    System.out.println("Client publicKey =" + "\t" + publicKey);
+                    byte[] signatureEncrypted= AsymmetricEncryption.encryptByteList(signature,sessionkey);
+//                    byte[] serializedMatrixEncrypted= AsymmetricEncryption.encryptByteList(serializedMatrix,sessionkey);
+                    SendStudentsMarks(objectOutputStream, studentsWithMarks);
+                    SignaturByteList(objectOutputStream, serializedMatrix);
+                    SignaturByteList(objectOutputStream, signatureEncrypted);
+                    String ok1 = in.readLine();
+                    String DecryptedResponse = AsymmetricEncryption.decrypt(ok1,sessionkey);
+                    System.out.println("Server response: " + DecryptedResponse);
+                    System.out.print("Enter the directory path to save server response: ");
+                    String directoryPath = scanner.next();
+                    String fileName = "output.txt";
+                    FileHandler.saveTextToFile(directoryPath,fileName,DecryptedResponse);
 
-                        //----------------------------------
+                    //----------------------------------
 //                    }
                 }
 //                signMessageReceived = in.readLine();
@@ -224,22 +227,16 @@ public class TCPClient {
                         String isCorrect = in.readLine();
                         if (isCorrect.equals("true")) {
                             String digital_certificate = in.readLine();
-                            String Signature_sever= in.readLine();
                             System.out.println("digital_certificate\n" + digital_certificate);
                             byte[] decodedBytes = Base64.getDecoder().decode(digital_certificate);
                             CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
                             X509Certificate certificate = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(decodedBytes));
                             System.out.println("certificate" + certificate);
-                            System.out.println(DCA.verify(digital_certificate,Signature_sever,serverPublicKey));
-                            if(DCA.verify(digital_certificate,Signature_sever,serverPublicKey)){
-                                System.out.println("The digital certificate is valid");
                             System.out.println("Enter path to save digital_certificate");
                             String path = scanner.next();
                             String certificate_path = path +"\\digital_certificate.cer";
                             System.out.println(certificate_path);
-                            DCA.saveCertificate(certificate_path, certificate);}
-                            else{
-                            System.out.println("The certificate was not saved because it is invalid");}
+                            DCA.saveCertificate(certificate_path, certificate);
 
                         } else {
                             String error = in.readLine();
@@ -260,10 +257,10 @@ public class TCPClient {
 
     private static void SendStudentsMarks(ObjectOutputStream objectOutputStream,List<StudentInfo> stuList) throws Exception{
         if (!StudentDaoImpl.isStudent(username)){
-        objectOutputStream.writeObject(stuList);
-        objectOutputStream.flush();
-        System.out.println("Marks List sent to the server.");
-    }}
+            objectOutputStream.writeObject(stuList);
+            objectOutputStream.flush();
+            System.out.println("Marks List sent to the server.");
+        }}
 
     private static void SignaturByteList(ObjectOutputStream objectOutputStream,byte[] listByte) throws Exception{
         if (!StudentDaoImpl.isStudent(username)){
@@ -380,11 +377,10 @@ public class TCPClient {
         // Receive the server's public key
         String serverMessage = in.readLine();
 
-         serverPublicKey = PrettyGoodPrivacy.convertStringToPublicKey(serverMessage);
+        PublicKey serverPublicKey = PrettyGoodPrivacy.convertStringToPublicKey(serverMessage);
         System.out.println("Server's public key: " + serverMessage);
 
 //            PrettyGoodPrivacy.storePublicKeyToFile(serverPublicKey, "");
         return serverPublicKey;
 
     }}
-

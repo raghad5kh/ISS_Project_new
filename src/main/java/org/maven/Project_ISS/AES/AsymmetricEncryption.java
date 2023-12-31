@@ -31,6 +31,21 @@ public class AsymmetricEncryption {
         byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedText));
         return new String(decryptedBytes);
     }
+    public static byte[] encryptByteList(byte[] plainBytes, String KEY) throws Exception {
+        byte[] key = KEY.getBytes(StandardCharsets.UTF_8);
+        SecretKeySpec secretKey = new SecretKeySpec(key, ALGORITHM);
+        Cipher cipher = Cipher.getInstance(ALGORITHM);
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        return cipher.doFinal(plainBytes);
+    }
+
+    public static byte[] decryptByteList(byte[] encryptedBytes, String KEY) throws Exception {
+        byte[] key = KEY.getBytes(StandardCharsets.UTF_8);
+        SecretKeySpec secretKey = new SecretKeySpec(key, ALGORITHM);
+        Cipher cipher = Cipher.getInstance(ALGORITHM);
+        cipher.init(Cipher.DECRYPT_MODE, secretKey);
+        return cipher.doFinal(encryptedBytes);
+    }
 
 //    public static String generateKey() throws NoSuchAlgorithmException {
 //        byte[] secureRandomKeyBytes = new byte[32];

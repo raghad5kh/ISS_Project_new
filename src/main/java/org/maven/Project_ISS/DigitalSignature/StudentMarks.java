@@ -1,5 +1,7 @@
 package org.maven.Project_ISS.DigitalSignature;
 
+import org.maven.Project_ISS.dao.StudentDao;
+import org.maven.Project_ISS.dao.StudentDaoImpl;
 import org.maven.Project_ISS.socket.TCPClient;
 
 import java.io.*;
@@ -13,6 +15,7 @@ public class StudentMarks {
     String name;
     int mark ;
     StudentInfo student = new  StudentInfo(name,mark);
+    StudentDao studentDao = new StudentDaoImpl();
 
     public  void MakeCoiceToEntermarks(){
         System.out.println("Do you want to enter student marks"+"\n" +

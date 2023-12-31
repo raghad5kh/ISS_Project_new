@@ -272,4 +272,32 @@ public class StudentDaoImpl implements StudentDao {
         }
         return 0;
     }
+
+    @Override
+    public  boolean exist_username(String username) {
+        Connection con = DBConnection.getConnection();
+        if (con == null) {
+            return false;
+        }
+        String query = "SELECT * FROM students WHERE username= ?;";
+        try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+            preparedStatement.setString(1, username);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next() ) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            try {
+                con.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

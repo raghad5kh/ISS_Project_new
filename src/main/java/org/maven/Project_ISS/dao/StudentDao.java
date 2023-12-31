@@ -16,7 +16,7 @@ public interface StudentDao {
     void updatePublicKey(String username,String publicKey);
 
     int get_id(String username);
-
+    boolean exist_username(String username);
 
 
 }

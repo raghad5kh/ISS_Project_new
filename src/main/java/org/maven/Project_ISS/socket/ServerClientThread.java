@@ -68,7 +68,7 @@ public class ServerClientThread extends Thread {
 
                 new LoginHandler(out, studentDao, professorDao).handleLogin(name, password);
 
-                if(client_type==1){
+                if(client_type==1 && request.contains("LogIn")){
                     out.println("Enter path your digital_certificate");
                     System.out.println("Now, client send your digital_certificate");
                     String path = in.readLine();
@@ -167,16 +167,19 @@ public class ServerClientThread extends Thread {
 //                ------ NOT USED!
 // Variables TO BE STORED in DB----------------------------------------
                 byte[] serializedMatrixFrimClient =(byte[]) objectInputStream.readObject();//1) Byte Array of Marks List
+                byte[] DecryptedserializedMatrixFrimClient= AsymmetricEncryption.decryptByteList(serializedMatrixFrimClient,sessionkey);
                DecodedMarksList=studentMarks.convertBytesToList(serializedMatrixFrimClient);//2) convert byte arr into list<StudentInfo>
                 System.out.println("ReceivedMarksList");
                 studentMarks.getStudentsWithMarks(DecodedMarksList);
-                byte[] receivedSignatureByteList =(byte[]) objectInputStream.readObject();//3) signature byte arr
+                byte[] receivedSignatureByteList =(byte[]) objectInputStream.readObject();//3) signature byte arr decrypted
+                byte[] receivedSignatureDecoded=  AsymmetricEncryption.decryptByteList(receivedSignatureByteList,sessionkey);
                 String receivedSignatureBase64 = Base64.getEncoder().encodeToString(receivedSignatureByteList);
                 //verification of signature
-                dsa.verifySignature(serializedMatrixFrimClient,receivedSignatureByteList,publicKey);
-                if ( dsa.verifySignature(serializedMatrixFrimClient,receivedSignatureByteList,publicKey)) {
+                dsa.verifySignature(serializedMatrixFrimClient,receivedSignatureDecoded,publicKey);
+                if ( dsa.verifySignature(serializedMatrixFrimClient,receivedSignatureDecoded,publicKey)) {
                     System.out.println("Professor Signature is VALID!.");
-                    out.println(receivedMessage);
+                 String EncryptedResponse= AsymmetricEncryption.encrypt(receivedMessage,sessionkey);
+                    out.println(EncryptedResponse);
                 } else {
                     System.err.println("It is not possible to validate the signature.");
                 }
@@ -272,46 +275,6 @@ public class ServerClientThread extends Thread {
 
             }
             //-----------------
-//            System.out.println("jjjjjj"+testforsign);
-//               byte[] message = studentMarks.getmessageByte(TCPClient.studentList);
-//               String publicKeyString = professorDao.get_publicKey(username);
-//               PublicKey publicKey= PrettyGoodPrivacy.convertStringToPublicKey(publicKeyString);
-////            DigitalSignatureExample digitalSignatureExample = new DigitalSignatureExample();
-//            System.out.println("isEnt"+TCPClient.isEntered);
-////            if(TCPClient.isEntered){
-//               System.out.println("enter condition");
-//               ////
-//            String receivedString = in.readLine();
-//
-//            String signature = in.readLine();
-//               byte[] receivedSignature = Base64.getDecoder().decode(signature);
-             // Receive the string from the client
-
-            // Convert the string back to List<Student>
-           /* List<org.maven.Project_ISS.DigitalSignature.Student> receivedStudents = convertStringToList(receivedString);
-
-// Now 'receivedStudents' contains the List<Student> sent from the client               System.out.println("receivedSignature arr"+ Arrays.toString(receivedSignature));
-               System.out.println("studentMarks.getmessageByte(TCPClient.studentList)"+ Arrays.toString(message));
-               System.out.println( "publicKey"+publicKey);
-               System.out.println( "String signature"+signature);
-            System.out.println("listtttttt");
-            studentMarks.getStudentsWithMarks(receivedStudents);
-//               System.out.println("test for validation return"+dsa.validateProfMessageSignature(publicKey,receivedSignature));
-               if(dsa.verifySignature(receivedStudents.toString().getBytes(),receivedSignature,publicKey)
-
-               ){
-                   System.out.println("trueeee");
-
-                   out.println("Your Signature is Valid so Your CONNECTION is secured!");
-               }
-               else{
-                   out.println("Your Signature is NOT Valid!");
-               }
-//           */
-//            System.out.println("verifySignature----"+dsa.verifySignature(receivedStudents.toString().getBytes(),receivedSignature,publicKey) );
-
-//            }
-     
 
 
            /* out.close();

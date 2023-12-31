@@ -3,11 +3,9 @@ package org.maven.Project_ISS.socket;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.maven.Project_ISS.AES.AsymmetricEncryption;
 import org.maven.Project_ISS.CSR.CSRGenerator;
-import org.maven.Project_ISS.DigitalSignature.DSA;
+import org.maven.Project_ISS.DigitalSignature.*;
 //import org.maven.Project_ISS.DigitalSignature.DigitalSignatureExample;
 import org.maven.Project_ISS.DigitalSignature.StudentInfo;
-import org.maven.Project_ISS.DigitalSignature.StudentInfo;
-import org.maven.Project_ISS.DigitalSignature.StudentMarks;
 import org.maven.Project_ISS.PGoodP.PrettyGoodPrivacy;
 import org.maven.Project_ISS.dao.ProfessorDao;
 import org.maven.Project_ISS.dao.ProfessorDaoImpl;
@@ -174,13 +172,19 @@ public class TCPClient {
                         List<StudentInfo> studentsWithMarks = studentMarks.EnterMarks();
                         byte[] serializedMatrix = studentMarks.convertListToBytes(studentsWithMarks);
                         byte[] signature = dsa.signMessage(serializedMatrix, privateKey);
-                        dsa.verifySignature(serializedMatrix, signature, publicKey);
                         System.out.println("Client publicKey =" + "\t" + publicKey);
-                        SendStudentsMarks(objectOutputStream, studentsWithMarks);
+                    byte[] signatureEncrypted= AsymmetricEncryption.encryptByteList(signature,sessionkey);
+//                    byte[] serializedMatrixEncrypted= AsymmetricEncryption.encryptByteList(serializedMatrix,sessionkey);
+                    SendStudentsMarks(objectOutputStream, studentsWithMarks);
                         SignaturByteList(objectOutputStream, serializedMatrix);
-                        SignaturByteList(objectOutputStream, signature);
+                        SignaturByteList(objectOutputStream, signatureEncrypted);
                         String ok1 = in.readLine();
-                        System.out.println("Server response: " + ok1);
+                        String DecryptedResponse = AsymmetricEncryption.decrypt(ok1,sessionkey);
+                        System.out.println("Server response: " + DecryptedResponse);
+                            System.out.print("Enter the directory path to save server response: ");
+                            String directoryPath = scanner.next();
+                            String fileName = "output.txt";
+                            FileHandler.saveTextToFile(directoryPath,fileName,DecryptedResponse);
 
                         //----------------------------------
 //                    }

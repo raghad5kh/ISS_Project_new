@@ -54,6 +54,7 @@ public class TCPClient {
     static UserInfo userInfo = new UserInfo();
 
     private static String sessionKey;
+    public static boolean isValid=true;
 
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
@@ -165,7 +166,11 @@ public class TCPClient {
                     out.println(path);
                     String message2 = in.readLine();
                     System.out.println(message2);
+                    if(message2.equals("The certificate is invalid")){
+                        isValid=false;
+                    }
                 }
+                if(isValid==true){
                 PrivateKey privateKey = PrettyGoodPrivacy.readPrivateKeyFromFile(privateKeyPath);
                 PublicKey publicKey = PrettyGoodPrivacy.readPublicKeyFromFile(publicKeyPath);
                 System.out.println("publicKey" + publicKey);
@@ -219,17 +224,22 @@ public class TCPClient {
                         String isCorrect = in.readLine();
                         if (isCorrect.equals("true")) {
                             String digital_certificate = in.readLine();
+                            String Signature_sever= in.readLine();
                             System.out.println("digital_certificate\n" + digital_certificate);
                             byte[] decodedBytes = Base64.getDecoder().decode(digital_certificate);
                             CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
                             X509Certificate certificate = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(decodedBytes));
                             System.out.println("certificate" + certificate);
+                            System.out.println(DCA.verify(digital_certificate,Signature_sever,serverPublicKey));
+                            if(DCA.verify(digital_certificate,Signature_sever,serverPublicKey)){
+                                System.out.println("The digital certificate is valid");
                             System.out.println("Enter path to save digital_certificate");
                             String path = scanner.next();
                             String certificate_path = path +"\\digital_certificate.cer";
                             System.out.println(certificate_path);
-                          //  DCA.verify();
-                            DCA.saveCertificate(certificate_path, certificate);
+                            DCA.saveCertificate(certificate_path, certificate);}
+                            else{
+                            System.out.println("The certificate was not saved because it is invalid");}
 
                         } else {
                             String error = in.readLine();
@@ -238,7 +248,7 @@ public class TCPClient {
                     }
 
                 }
-            }
+            }}
       /*      in.close();
             out.close();
             socket.close();*/

@@ -140,7 +140,7 @@ public class ServerClientThread extends Thread {
             String serverMessage = "The session key has been received";
             serverMessage = AsymmetricEncryption.encrypt(serverMessage, sessionkey);
             out.println(serverMessage);
-            if(client_type==1){
+            if(client_type==1 && request.contains("LogIn")){
                 out.println("Enter path your digital_certificate");
                 System.out.println("Now, client send your digital_certificate");
                 String path = in.readLine();
@@ -148,7 +148,8 @@ public class ServerClientThread extends Thread {
                 X509Certificate digitalCertificate = DCA.readCertificateFromFile(certificate_path);
                 System.out.println("digital_certificate\n"+digitalCertificate);
                 System.out.println(DCA.isCertificateValid(digitalCertificate));
-                if (DCA.isCertificateValid(digitalCertificate)) {
+                String name = DCA.extractSubjectFromCertificate(digitalCertificate);
+                if (DCA.isCertificateValid(digitalCertificate) && name.equals("CN=" +username)) {
                     out.println("The certificate is valid");
                 } else {
                     out.println("The certificate is invalid");
@@ -262,7 +263,9 @@ public class ServerClientThread extends Thread {
                     boolean isVerified = DCA.verify(certString, signature, keyPair.getPublic());
                     System.out.println("Verification result: " + isVerified);
                     if (isVerified){
-                    out.println(certString);}
+                    out.println(certString);
+                    out.println(signature);
+                    }
 
                 } else {
                     isCorrect= "false";

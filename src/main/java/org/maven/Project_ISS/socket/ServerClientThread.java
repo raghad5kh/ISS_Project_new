@@ -68,20 +68,7 @@ public class ServerClientThread extends Thread {
 
                 new LoginHandler(out, studentDao, professorDao).handleLogin(name, password);
 
-                if(client_type==1){
-                    out.println("Enter path your digital_certificate");
-                    System.out.println("Now, client send your digital_certificate");
-                    String path = in.readLine();
-                    String certificate_path = path +"\\digital_certificate.cer";
-                    X509Certificate digitalCertificate = DCA.readCertificateFromFile(certificate_path);
-                    System.out.println("digital_certificate\n"+digitalCertificate);
-                    System.out.println(DCA.isCertificateValid(digitalCertificate));
-                    if (DCA.isCertificateValid(digitalCertificate)) {
-                        out.println("The certificate is valid");
-                    } else {
-                        out.println("The certificate is invalid");
-                    }
-                }
+
 
 
             }
@@ -153,6 +140,20 @@ public class ServerClientThread extends Thread {
             String serverMessage = "The session key has been received";
             serverMessage = AsymmetricEncryption.encrypt(serverMessage, sessionkey);
             out.println(serverMessage);
+            if(client_type==1){
+                out.println("Enter path your digital_certificate");
+                System.out.println("Now, client send your digital_certificate");
+                String path = in.readLine();
+                String certificate_path = path +"\\digital_certificate.cer";
+                X509Certificate digitalCertificate = DCA.readCertificateFromFile(certificate_path);
+                System.out.println("digital_certificate\n"+digitalCertificate);
+                System.out.println(DCA.isCertificateValid(digitalCertificate));
+                if (DCA.isCertificateValid(digitalCertificate)) {
+                    out.println("The certificate is valid");
+                } else {
+                    out.println("The certificate is invalid");
+                }
+            }
 //-----------------
             if(client_type==1) {
                 String receivedMessage = "Dear prof , " + username + " , your signed file have been received";

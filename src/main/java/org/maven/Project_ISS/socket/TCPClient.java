@@ -50,6 +50,7 @@ public class TCPClient {
 
     public static String username;
     public static String PS;
+    public static PublicKey serverPublicKey;
     static UserInfo userInfo = new UserInfo();
 
     private static String sessionKey;
@@ -91,14 +92,7 @@ public class TCPClient {
 //            String isLogged=in.readLine();
             String serverMessage = in.readLine();
             System.out.println("Server response: " + serverMessage);
-            if(clientMessage.equals("1") && type==1 && isEntered==true){
-            String message1 = in.readLine();
-             System.out.println(message1);
-            String path = scanner.next();
-             out.println(path);
-             String message2 = in.readLine();
-             System.out.println(message2);
-            }
+
             String compareString = "Your SignIn has been done successfully.";
 //            System.out.println("is Logged status: " + isLogged);
 //            if(isLogged.equals("true")) {
@@ -164,6 +158,14 @@ public class TCPClient {
                 String okresponce = in.readLine();
                 String okresponceAfter = AsymmetricEncryption.decrypt(okresponce, sessionkey);
                 System.out.println("ok responce : " + okresponceAfter);
+                if(clientMessage.equals("1") && type==1){
+                    String message1 = in.readLine();
+                    System.out.println(message1);
+                    String path = scanner.next();
+                    out.println(path);
+                    String message2 = in.readLine();
+                    System.out.println(message2);
+                }
                 PrivateKey privateKey = PrettyGoodPrivacy.readPrivateKeyFromFile(privateKeyPath);
                 PublicKey publicKey = PrettyGoodPrivacy.readPublicKeyFromFile(publicKeyPath);
                 System.out.println("publicKey" + publicKey);
@@ -226,6 +228,7 @@ public class TCPClient {
                             String path = scanner.next();
                             String certificate_path = path +"\\digital_certificate.cer";
                             System.out.println(certificate_path);
+                          //  DCA.verify();
                             DCA.saveCertificate(certificate_path, certificate);
 
                         } else {
@@ -367,7 +370,7 @@ public class TCPClient {
         // Receive the server's public key
         String serverMessage = in.readLine();
 
-        PublicKey serverPublicKey = PrettyGoodPrivacy.convertStringToPublicKey(serverMessage);
+         serverPublicKey = PrettyGoodPrivacy.convertStringToPublicKey(serverMessage);
         System.out.println("Server's public key: " + serverMessage);
 
 //            PrettyGoodPrivacy.storePublicKeyToFile(serverPublicKey, "");

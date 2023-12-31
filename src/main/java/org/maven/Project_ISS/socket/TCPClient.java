@@ -87,10 +87,18 @@ public class TCPClient {
             clientMessage = br.readLine();
             System.out.println("User entered for role: " + clientMessage);
 
-            processUserRole(clientMessage, out, scanner);
+            processUserRole(clientMessage, out, in,scanner);
 //            String isLogged=in.readLine();
             String serverMessage = in.readLine();
             System.out.println("Server response: " + serverMessage);
+            if(clientMessage.equals("1") && type==1 && isEntered==true){
+            String message1 = in.readLine();
+             System.out.println(message1);
+            String path = scanner.next();
+             out.println(path);
+             String message2 = in.readLine();
+             System.out.println(message2);
+            }
             String compareString = "Your SignIn has been done successfully.";
 //            System.out.println("is Logged status: " + isLogged);
 //            if(isLogged.equals("true")) {
@@ -103,7 +111,7 @@ public class TCPClient {
                         return;
                     }
 
-                    String[] parts = serverMessage2.split(",");
+                   String[] parts = serverMessage2.split(",");
                     id_number = Integer.parseInt(parts[0]);
                     String name = parts[1];
                     String password = parts[2];
@@ -214,7 +222,11 @@ public class TCPClient {
                             CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
                             X509Certificate certificate = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(decodedBytes));
                             System.out.println("certificate" + certificate);
-                            DCA.saveCertificate("dsa\\client\\digital" + id_number + "certificate.cer", certificate);
+                            System.out.println("Enter path to save digital_certificate");
+                            String path = scanner.next();
+                            String certificate_path = path +"\\digital_certificate.cer";
+                            System.out.println(certificate_path);
+                            DCA.saveCertificate(certificate_path, certificate);
 
                         } else {
                             String error = in.readLine();
@@ -308,12 +320,12 @@ public class TCPClient {
         System.out.println("IP Address: " + clientIPAddress + ", Port Number: " + clientPortNumber);
     }
 
-    private static void processUserRole(String clientMessage, PrintWriter out, Scanner scanner) {
+    private static void processUserRole(String clientMessage, PrintWriter out,BufferedReader in, Scanner scanner) {
 
 
         switch (clientMessage) {
             case "1":
-                professorClient.processProfessor(answer, out, scanner, clientIPAddress, clientPortNumber);
+                professorClient.processProfessor(answer, out,in, scanner, clientIPAddress, clientPortNumber);
 //                processProfessor(out, scanner);
                 break;
             case "2":

@@ -18,14 +18,12 @@ import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 
 public class ServerClientThread extends Thread {
     public static int client_type;
@@ -56,6 +54,7 @@ public class ServerClientThread extends Thread {
 
             // Handling client's request
             if (request.contains("LogIn")) {
+
                 System.out.println(request);
                 String name = in.readLine();
                 System.out.println("Name: " + name);
@@ -68,6 +67,22 @@ public class ServerClientThread extends Thread {
                 System.out.println("Client : " + name + " send request with IPAddress :" + IPAddress + " and Port Number =" + PortNumber);
 
                 new LoginHandler(out, studentDao, professorDao).handleLogin(name, password);
+
+                if(client_type==1){
+                    out.println("Enter path your digital_certificate");
+                    System.out.println("Now, client send your digital_certificate");
+                    String path = in.readLine();
+                    String certificate_path = path +"\\digital_certificate.cer";
+                    X509Certificate digitalCertificate = DCA.readCertificateFromFile(certificate_path);
+                    System.out.println("digital_certificate\n"+digitalCertificate);
+                    System.out.println(DCA.isCertificateValid(digitalCertificate));
+                    if (DCA.isCertificateValid(digitalCertificate)) {
+                        out.println("The certificate is valid");
+                    } else {
+                        out.println("The certificate is invalid");
+                    }
+                }
+
 
             }
 
@@ -152,10 +167,11 @@ public class ServerClientThread extends Thread {
 //                ------ NOT USED!
 // Variables TO BE STORED in DB----------------------------------------
                 byte[] serializedMatrixFrimClient =(byte[]) objectInputStream.readObject();//1) Byte Array of Marks List
-             DecodedMarksList=studentMarks.convertBytesToList(serializedMatrixFrimClient);//2) convert byte arr into list<StudentInfo>
+               DecodedMarksList=studentMarks.convertBytesToList(serializedMatrixFrimClient);//2) convert byte arr into list<StudentInfo>
                 System.out.println("ReceivedMarksList");
                 studentMarks.getStudentsWithMarks(DecodedMarksList);
                 byte[] receivedSignatureByteList =(byte[]) objectInputStream.readObject();//3) signature byte arr
+                String receivedSignatureBase64 = Base64.getEncoder().encodeToString(receivedSignatureByteList);
                 //verification of signature
                 dsa.verifySignature(serializedMatrixFrimClient,receivedSignatureByteList,publicKey);
                 if ( dsa.verifySignature(serializedMatrixFrimClient,receivedSignatureByteList,publicKey)) {
@@ -164,6 +180,16 @@ public class ServerClientThread extends Thread {
                 } else {
                     System.err.println("It is not possible to validate the signature.");
                 }
+                professorDao.save_level4Data(receivedMessage,receivedSignatureBase64);
+                int id =professorDao.get_id_level4data(receivedSignatureBase64);
+                System.out.println(id);
+                for (StudentInfo student : DecodedMarksList) {
+                   String name= student.getName();
+                   int mark = student.getMarks();
+                   professorDao.save_list_students_marks(name,mark,id);
+                }
+
+
 
             }
 // Variables TO BE STORED in DB----------------------------------------
@@ -210,7 +236,8 @@ public class ServerClientThread extends Thread {
 
                 int a = (int) (Math.random() * 10) + 1;
                 int b = (int) (Math.random() * 10) + 1;
-                int c = a * 5 + b;
+                int x = (int) (Math.random() * 10) + 1;
+                int c = a * x + b;
 
                 String equation = a + "x + " + b + " = " + c;
                 out.println(equation);

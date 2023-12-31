@@ -296,5 +296,77 @@ public class ProfessorDaoImpl implements ProfessorDao {
         }
         return null;
     }
+
+    @Override
+    public void save_level4Data(String Server_response, String signature) {
+        Connection con = DBConnection.getConnection();
+        if (con == null) {
+            return;
+        }
+        String query = "INSERT INTO level4_data(Server_response,signature) VALUES (?,?);";
+        try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+            preparedStatement.setString(1, Server_response);
+            preparedStatement.setString(2, signature);
+            preparedStatement.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                con.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public int get_id_level4data(String signature) {
+        try (Connection con = DBConnection.getConnection()) {
+            if (con == null) {
+                return 0;
+            }
+            String query = "SELECT id FROM level4_data WHERE signature = ?;";
+            try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+                preparedStatement.setString(1, signature);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        int id = resultSet.getInt("id");
+                        return id;
+                    } else return 0;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    @Override
+    public void save_list_students_marks(String name, int mark,int fk) {
+        Connection con = DBConnection.getConnection();
+        if (con == null) {
+            return;
+        }
+        String query = "INSERT INTO list_students_marks(name,mark,level4_data_id) VALUES (?,?,?);";
+        try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+            preparedStatement.setString(1, name);
+            preparedStatement.setInt(2, mark);
+            preparedStatement.setInt(3, fk);
+            preparedStatement.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                con.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }
 

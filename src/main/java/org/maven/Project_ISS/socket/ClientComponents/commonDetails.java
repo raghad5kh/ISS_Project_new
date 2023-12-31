@@ -10,6 +10,7 @@ import java.util.Scanner;
 public class commonDetails {
     public  void signin_processCommonStudentDetails(PrintWriter out, Scanner scanner,String clientIPAddress,int clientPortNumber) {
 
+        StudentDao studentDao = new StudentDaoImpl();
         int id_number;
         String name;
         String password;
@@ -31,7 +32,8 @@ public class commonDetails {
         System.out.println("Your password: " + password);
         TCPClient.PS=password;
         getClientDetails(out,clientIPAddress,clientPortNumber);
-        TCPClient.isEntered=true;
+        if(studentDao.exist(id_number)){
+        TCPClient.isEntered=true;}
         out.flush();
     }
 
@@ -59,8 +61,9 @@ public class commonDetails {
 
         TCPClient.PS=password;
         getClientDetails(out,clientIPAddress,clientPortNumber);
-        TCPClient.isEntered=true;
-
+       if( professorDao.exist(id_number)) {
+           TCPClient.isEntered = true;
+       }
         out.flush();
     }
     private static void getClientDetails(PrintWriter out , String clientIPAddress,int clientPortNumber ) {
@@ -71,7 +74,8 @@ public class commonDetails {
 
         String name;
         String password;
-
+        StudentDao studentDao = new StudentDaoImpl();
+        ProfessorDao professorDao = new ProfessorDaoImpl();
         System.out.println("Enter your name");
         name = scanner.next();
         System.out.println("Your name: " + name);
@@ -83,7 +87,8 @@ public class commonDetails {
         out.println(password);
         System.out.println("Your password: " + password);
         getClientDetails(out,clientIPAddress,clientPortNumber);
-        TCPClient.isEntered=true;
+        if(studentDao.exist_account(name,password)|| professorDao.exist_account(name,password)){
+        TCPClient.isEntered=true;}
         out.flush();
     }
 

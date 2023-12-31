@@ -10,7 +10,7 @@ import java.net.Socket;
 import java.util.Scanner;
 
 public class ProfessorClient {
-    public  void processProfessor(String answer,PrintWriter out, Scanner scanner,String clientIPAddress
+    public  void processProfessor(String answer,PrintWriter out,BufferedReader in, Scanner scanner,String clientIPAddress
     , int clientPortNumber) {
         commonDetails commonDetails = new commonDetails();
         try {
@@ -23,9 +23,9 @@ public class ProfessorClient {
 
             switch (answer){
                 case "1":
+                    TCPClient.type=1;
                     System.out.println("LogIn Start...");
                     out.println("LogIn");
-                    TCPClient.type=1;
                     commonDetails.processCommonUserDetails_login(out,scanner,clientIPAddress,clientPortNumber);
                     break;
                 case "2":

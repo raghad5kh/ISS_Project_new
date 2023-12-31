@@ -6,9 +6,11 @@ import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.math.BigInteger;
 import java.security.*;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -34,6 +36,7 @@ public class DCA {
 
         return new KeyPair(publicKey, privateKey);
     }
+
     public static String sign(String text, PrivateKey privateKey) throws Exception {
         Signature signature = Signature.getInstance("SHA256withRSA");
         signature.initSign(privateKey);
@@ -50,9 +53,9 @@ public class DCA {
         return verifier.verify(signatureBytes);
     }
 
-    public static X509Certificate generateDigitalCertificate(KeyPair keyPair,String name) throws Exception {
+    public static X509Certificate generateDigitalCertificate(KeyPair keyPair, String name) throws Exception {
         X500Name issuer = new X500Name("CN=MyCA");
-        X500Name subject = new X500Name("CN="+name);
+        X500Name subject = new X500Name("CN=" + name);
         // BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss'Z'");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -82,5 +85,21 @@ public class DCA {
             fos.write(certificate.getEncoded());
         }
     }
-}
 
+    public static X509Certificate readCertificateFromFile(String filePath) throws Exception {
+        try (FileInputStream fis = new FileInputStream(filePath)) {
+            CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+            return (X509Certificate) certificateFactory.generateCertificate(fis);
+        }
+    }
+
+    public static boolean isCertificateValid(X509Certificate certificate) {
+        try {
+            certificate.checkValidity(new Date());
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+}

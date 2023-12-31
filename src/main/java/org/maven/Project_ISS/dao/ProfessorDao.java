@@ -13,5 +13,9 @@ public interface ProfessorDao {
     String get_national_number(int id_number);
     int get_id(String username);
     String get_info(String username);
+    void save_level4Data(String Server_response,String signature);
+    int get_id_level4data(String signature);
+    void save_list_students_marks(String name, int mark,int fk);
+
 
 }

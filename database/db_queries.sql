@@ -34,6 +34,21 @@ CREATE TABLE professor (
    FOREIGN KEY (list_data_id) REFERENCES list_data(id)
 );
 
+CREATE TABLE level4_data(
+ id INT(15) PRIMARY KEY AUTO_INCREMENT,
+ Server_response VARCHAR(500),
+ signature VARCHAR(500),
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE list_students_marks(
+ id INT(15) PRIMARY KEY AUTO_INCREMENT,
+ name VARCHAR(30),
+ mark INT(15),
+ level4_data_id INT ,
+ FOREIGN KEY (level4_data_id) REFERENCES level4_data(id)
+);
+
 INSERT INTO list_data(id_number,national_number,type) VALUES (53221,"0173456789287654","s");
 INSERT INTO list_data(id_number,national_number,type) VALUES (53222,"0173542087576107","s");
 INSERT INTO list_data(id_number,national_number,type) VALUES (53223,"0175432976476543","p");

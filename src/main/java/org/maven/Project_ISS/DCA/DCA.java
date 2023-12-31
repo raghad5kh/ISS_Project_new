@@ -10,6 +10,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.math.BigInteger;
 import java.security.*;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -101,5 +102,11 @@ public class DCA {
             return false;
         }
     }
+
+    public static String extractSubjectFromCertificate(X509Certificate certificate) {
+        X500Name subject = new X500Name(certificate.getSubjectX500Principal().getName());
+        return subject.toString();
+    }
+
 
 }

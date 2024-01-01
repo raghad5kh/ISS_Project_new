@@ -16,6 +16,14 @@ public class StudentInfo implements Serializable {
 
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setMarks(int marks) {
+        this.marks = marks;
+    }
+
     public String getName() {
         return name;
     }

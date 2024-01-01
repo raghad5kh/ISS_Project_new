@@ -1,9 +1,12 @@
 package org.maven.Project_ISS.dao;
 
+import org.maven.Project_ISS.DigitalSignature.StudentInfo;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class StudentDaoImpl implements StudentDao {
@@ -271,5 +274,170 @@ public class StudentDaoImpl implements StudentDao {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    @Override
+    public String get_info(String username) {
+        try (Connection con = DBConnection.getConnection()) {
+            if (con == null) {
+                return null;
+            }
+
+            String query = "SELECT address, phone_number, mobile_number FROM students WHERE username = ?;";
+            try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+                preparedStatement.setString(1, username);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+
+                        String address = resultSet.getString("address");
+                        String phoneNumber = resultSet.getString("phone_number");
+                        String mobileNumber = resultSet.getString("mobile_number");
+
+                        return "Address: " + address + ", Phone Number: " + phoneNumber + ", Mobile Number: " + mobileNumber;
+                    } else {
+                        return null;
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public String get_publicKey(String username) {
+        try (Connection con = DBConnection.getConnection()) {
+            if (con == null) {
+                return null;
+            }
+            String query = "SELECT publicKey FROM students WHERE username = ?;";
+            try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+                preparedStatement.setString(1, username);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        String publicKey = resultSet.getString("publicKey");
+                        return publicKey;
+                    } else return null;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public int get_numberYear(int id_number) {
+        try (Connection con = DBConnection.getConnection()) {
+            if (con == null) {
+                return 0;
+            }
+            String query = "SELECT number_year FROM list_data WHERE id_number = ?;";
+            try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+                preparedStatement.setInt(1, id_number);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        int  number_year = resultSet.getInt("number_year");
+                        return number_year;
+                    } else return 0;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    @Override
+    public String get_symbol(int number_year) {
+        try (Connection con = DBConnection.getConnection()) {
+            if (con == null) {
+                return null;
+            }
+            String query = "SELECT symbol FROM permission WHERE number_year = ?;";
+            try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+                preparedStatement.setInt(1, number_year);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        String symbol = resultSet.getString("symbol");
+                        return symbol;
+                    } else return null;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+
+    }
+
+    @Override
+    public List<StudentInfo> get_marks(String nameTable) {
+        List<StudentInfo> studentInfoList = new ArrayList<>();
+
+        try (Connection con = DBConnection.getConnection()) {
+            if (con == null) {
+                return null;
+            }
+
+            String query = "SELECT * FROM " + nameTable + ";";
+
+            try (PreparedStatement preparedStatement = con.prepareStatement(query);
+                 ResultSet resultSet = preparedStatement.executeQuery()) {
+
+                while (resultSet.next()) {
+                    StudentInfo studentInfo = new StudentInfo();
+                    studentInfo.setName(resultSet.getString("name"));
+                    studentInfo.setMarks(resultSet.getInt("mark"));
+                    studentInfoList.add(studentInfo);
+                }
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return studentInfoList.isEmpty() ? null : studentInfoList;
+    }
+
+    @Override
+    public String get_nameTable(String permission) {
+        try (Connection con = DBConnection.getConnection()) {
+            if (con == null) {
+                return null;
+            }
+            String query = "SELECT nameTable FROM permission WHERE name = ?;";
+            try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+                preparedStatement.setString(1, permission);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        String  nameTable = resultSet.getString("nameTable");
+                        return nameTable;
+                    } else return null;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

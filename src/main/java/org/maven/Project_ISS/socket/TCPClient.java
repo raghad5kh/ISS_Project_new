@@ -73,6 +73,7 @@ public class TCPClient {
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
 
             getClientDetails(socket);
 
@@ -166,6 +167,41 @@ public class TCPClient {
                     if(message2.equals("The certificate is invalid")){
                         isValid=false;
                     }
+                    String messageFinal = in.readLine();
+                    System.out.println(messageFinal);
+                    String path_pro = scanner.next();
+                    out.println(path_pro);
+                    String ok = in.readLine();
+                    System.out.println(ok);
+                    if(ok.equals("The certificate is invalid")){
+                        isValid=false;
+                    }
+                    else {
+                    String message_permission = in.readLine();
+                    System.out.println("Your permission on the server is:"+message_permission);
+                    List<StudentInfo> ReceivedMarksList= (List<StudentInfo>) objectInputStream.readObject();
+                    StudentMarks studentMarks1 = new StudentMarks();
+                    System.out.println("List of marks");
+                    studentMarks1.getStudentsWithMarks(ReceivedMarksList);}
+                }
+                if(clientMessage.equals("2") && type==1){
+                    String messageFinal = in.readLine();
+                    System.out.println(messageFinal);
+                    String path_stu = scanner.next();
+                    out.println(path_stu);
+                    String ok = in.readLine();
+                    System.out.println(ok);
+                    if(ok.equals("The certificate is invalid")){
+                        isValid=false;
+                    }
+                    else {
+                    String message_permission = in.readLine();
+                    System.out.println("Your permission on the server is:"+message_permission);
+                    List<StudentInfo> ReceivedMarksList= (List<StudentInfo>) objectInputStream.readObject();
+                    StudentMarks studentMarks1 = new StudentMarks();
+                    System.out.println("List of marks");
+                    studentMarks1.getStudentsWithMarks(ReceivedMarksList);}
+
                 }
                 if(isValid==true){
                 PrivateKey privateKey = PrettyGoodPrivacy.readPrivateKeyFromFile(privateKeyPath);
@@ -214,8 +250,6 @@ public class TCPClient {
                     if (type == 2) {
 
                         sendCSR(id_number, username, PS, publicKeyPath, privateKeyPath, out);
-
-
                         out.println("");
                         String ok1 = in.readLine();
                         System.out.println("Server response: " + ok1);
@@ -227,24 +261,90 @@ public class TCPClient {
                         String isCorrect = in.readLine();
                         if (isCorrect.equals("true")) {
                             String digital_certificate = in.readLine();
+                            String Signature_sever= in.readLine();
                             System.out.println("digital_certificate\n" + digital_certificate);
                             byte[] decodedBytes = Base64.getDecoder().decode(digital_certificate);
                             CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
                             X509Certificate certificate = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(decodedBytes));
                             System.out.println("certificate" + certificate);
-                            System.out.println("Enter path to save digital_certificate");
-                            String path = scanner.next();
-                            String certificate_path = path +"\\digital_certificate.cer";
-                            System.out.println(certificate_path);
-                            DCA.saveCertificate(certificate_path, certificate);
+                            System.out.println(DCA.verify(digital_certificate,Signature_sever,serverPublicKey));
+                            if(DCA.verify(digital_certificate,Signature_sever,serverPublicKey)){
+                                System.out.println("The digital certificate is valid");
+                                System.out.println("Enter path to save digital_certificate");
+                                String path = scanner.next();
+                                String certificate_path = path +"\\digital_certificate.cer";
+                                System.out.println(certificate_path);
+                                DCA.saveCertificate(certificate_path, certificate);}
+                            else{
+                                System.out.println("The certificate was not saved because it is invalid");}
 
                         } else {
                             String error = in.readLine();
                             System.out.println("Server response: " + error);
                         }
+                        String client_certificate = in.readLine();
+                        String Signature_sever= in.readLine();
+                        System.out.println("client_certificate\n" + client_certificate);
+                        byte[] decodedBytes = Base64.getDecoder().decode(client_certificate);
+                        CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+                        X509Certificate certificate = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(decodedBytes));
+                        System.out.println("certificate" + certificate);
+                        System.out.println(DCA.verify(client_certificate,Signature_sever,serverPublicKey));
+                        if(DCA.verify(client_certificate,Signature_sever,serverPublicKey)){
+                            System.out.println("The client certificate is valid");
+                            System.out.println("Enter path to save digital_certificate");
+                            String path = scanner.next();
+                            String certificate_path = path +"\\client_certificate.cer";
+                            System.out.println(certificate_path);
+                            DCA.saveCertificate(certificate_path, certificate);}
+                        else{
+                            System.out.println("The certificate was not saved because it is invalid");}
+
+
                     }
 
+
+
                 }
+                    if(clientMessage.equals("2")) {
+                        if (type == 2) {
+                            sendCSR(id_number, username, PS, publicKeyPath, privateKeyPath, out);
+                            out.println("");
+                           String ok1 = in.readLine();
+                           System.out.println("Server response: " + ok1);
+                            String equation = in.readLine();
+                            System.out.println(equation);
+                            System.out.print("Enter your solution for x: ");
+                            String userSolution = String.valueOf(scanner.nextInt());
+                            out.println(userSolution);
+                            String isCorrect = in.readLine();
+                            if (isCorrect.equals("true")) {
+                                String client_certificate = in.readLine();
+                                String Signature_sever= in.readLine();
+                                System.out.println("digital_certificate\n" + client_certificate);
+                                byte[] decodedBytes = Base64.getDecoder().decode(client_certificate);
+                                CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+                                X509Certificate certificate = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(decodedBytes));
+                                System.out.println("certificate" + certificate);
+                                System.out.println(DCA.verify(client_certificate,Signature_sever,serverPublicKey));
+                                if(DCA.verify(client_certificate,Signature_sever,serverPublicKey)){
+                                    System.out.println("The digital certificate is valid");
+                                    System.out.println("Enter path to save client_certificate");
+                                    String path = scanner.next();
+                                    String certificate_path = path +"\\client_certificate.cer";
+                                    System.out.println(certificate_path);
+                                    DCA.saveCertificate(certificate_path, certificate);}
+                                else{
+                                    System.out.println("The certificate was not saved because it is invalid");}
+
+                            } else {
+                                String error = in.readLine();
+                                System.out.println("Server response: " + error);
+                            }
+
+
+
+                        }}
             }}
       /*      in.close();
             out.close();
@@ -274,10 +374,16 @@ public class TCPClient {
             PublicKey publicKey= PrettyGoodPrivacy.readPublicKeyFromFile(publickeypath);
             PrivateKey privateKey= PrettyGoodPrivacy.readPrivateKeyFromFile(privatekeypath);
             KeyPair keyPair = CSRGenerator.createKeyPairFromKeyBytes(privateKey,publicKey);
-
-            ProfessorDao professorDao =new ProfessorDaoImpl();
-            String pro_info = professorDao.get_info(username);
-            String[] parts = pro_info.split(",");
+            String client_info;
+            if(StudentDaoImpl.isStudent(username)){
+                StudentDao studentDao = new StudentDaoImpl();
+                client_info=studentDao.get_info(username);
+            }
+            else {
+                ProfessorDao professorDao =new ProfessorDaoImpl();
+                client_info = professorDao.get_info(username);
+            }
+            String[] parts = client_info.split(",");
             String address = parts[0].trim().replace("Address:", "");
             String phoneNumber = parts[1].trim().replace("Phone Number:", "");
             String mobileNumber = parts[2].trim().replace("Mobile Number:", "");

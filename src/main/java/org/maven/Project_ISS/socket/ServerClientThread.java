@@ -13,10 +13,7 @@ import org.maven.Project_ISS.dao.*;
 import org.maven.Project_ISS.socket.AuthForms.LoginHandler;
 import org.maven.Project_ISS.socket.AuthForms.SignInHandler;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
@@ -24,6 +21,8 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ServerClientThread extends Thread {
     public static int client_type;
@@ -32,6 +31,7 @@ public class ServerClientThread extends Thread {
     private final int clientNo;
 
     private static String username;
+    public static int id_number;
     public static boolean testforsign=false;
 
     public ServerClientThread(Socket inSocket, int counter) {
@@ -46,6 +46,7 @@ public class ServerClientThread extends Thread {
             BufferedReader in = new BufferedReader(new InputStreamReader(serverClient.getInputStream()));
             PrintWriter out = new PrintWriter(serverClient.getOutputStream(), true);
             ObjectInputStream objectInputStream = new ObjectInputStream(serverClient.getInputStream());
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(serverClient.getOutputStream());
             DSA dsa=new DSA();            // Read client request
             String request = in.readLine();
             StudentMarks studentMarks = new StudentMarks();
@@ -75,7 +76,7 @@ public class ServerClientThread extends Thread {
 
             if (request.contains("SignIn")) {
                 System.out.println(request);
-                int id_number = Integer.parseInt(in.readLine());
+                id_number = Integer.parseInt(in.readLine());
                 System.out.println("id_number: " + id_number);
                 String name = in.readLine();
                 System.out.println("Name: " + name);
@@ -154,7 +155,78 @@ public class ServerClientThread extends Thread {
                 } else {
                     out.println("The certificate is invalid");
                 }
+                out.println("Enter path your digital_certificate");
+                System.out.println("Now, client send your digital_certificate");
+                String path2 = in.readLine();
+                String clientCertificate_path = path2 +"\\client_certificate.cer";
+                X509Certificate clientCertificate = DCA.readCertificateFromFile(clientCertificate_path);
+                System.out.println("digital_certificate\n"+clientCertificate);
+                System.out.println(DCA.isCertificateValid(clientCertificate));
+                String subject = DCA.extractSubjectFromCertificate(clientCertificate);
+                System.out.println(subject);
+                Pattern pattern = Pattern.compile("\\((.*?)\\)");
+                Matcher matcher = pattern.matcher(subject);
+                if (matcher.find()) {
+                    String result = matcher.group(1);
+                    System.out.println("result" + result);
+                    Pattern pattern1 = Pattern.compile("CN=([^(]+)");
+                    Matcher matcher2 = pattern1.matcher(subject);
+                    System.out.println(subject);
+                    System.out.println(matcher2.find());
+                    String result2 = matcher2.group(1);
+                    System.out.println(result2);
+                    if (DCA.isCertificateValid(clientCertificate) && result2.equals(username)) {
+                        out.println("The certificate is valid");
+                        String permission = professorDao.get_permission("(" + result + ")");
+                        System.out.println("permission_pro" + permission);
+                        out.println(permission);
+                        String nameTable = professorDao.get_nameTable(permission);
+                        System.out.println(nameTable);
+                        List<StudentInfo> studentInfo = professorDao.get_marks(nameTable);
+                        StudentMarks studentMarks1 = new StudentMarks();
+                        studentMarks1.getStudentsWithMarks(studentInfo);
+                        SendStudentsMarks(objectOutputStream, studentInfo);
+
+                    } else {
+                        out.println("The certificate is invalid");
+                    }
+                }
             }
+            if(client_type==2 && request.contains("LogIn")){
+                out.println("Enter path your digital_certificate");
+                System.out.println("Now, client send your digital_certificate");
+                String path2 = in.readLine();
+                String clientCertificate_path = path2 +"\\client_certificate.cer";
+                X509Certificate clientCertificate = DCA.readCertificateFromFile(clientCertificate_path);
+                System.out.println("digital_certificate\n"+clientCertificate);
+                System.out.println(DCA.isCertificateValid(clientCertificate));
+                String subject = DCA.extractSubjectFromCertificate(clientCertificate);
+                System.out.println(subject);
+                Pattern pattern = Pattern.compile("\\((.*?)\\)");
+                Matcher matcher = pattern.matcher(subject);
+                if (matcher.find()) {
+                    String result = matcher.group(1);
+                    System.out.println("result"+result);
+                    Pattern pattern1 = Pattern.compile("CN=([^(]+)");
+                    Matcher matcher2 = pattern1.matcher(subject);
+                    System.out.println(subject);
+                        String result2 = matcher2.group(1);
+                    if (DCA.isCertificateValid(clientCertificate)&& result2.equals(username)) {
+                        out.println("The certificate is valid");
+                        String permission = professorDao.get_permission("(" + result + ")");
+                        System.out.println("permission_pro " + permission);
+                        out.println(permission);
+                        String nameTable = studentDao.get_nameTable(permission);
+                        System.out.println(nameTable);
+                        List<StudentInfo> studentInfo = studentDao.get_marks(nameTable);
+                        StudentMarks studentMarks1 = new StudentMarks();
+                        studentMarks1.getStudentsWithMarks(studentInfo);
+                        SendStudentsMarks(objectOutputStream, studentInfo);
+                    }  else {
+                       out.println("The certificate is invalid");
+                }
+            }}
+
 //-----------------
             if(client_type==1) {
                 String receivedMessage = "Dear prof , " + username + " , your signed file have been received";
@@ -164,8 +236,7 @@ public class ServerClientThread extends Thread {
                 System.out.println("Client publicKey"+publicKey);
                 List<StudentInfo> DecodedMarksList= new ArrayList<StudentInfo>();
 //                ------ NOT USED!
-                List<StudentInfo> ReceivedMarksList=
-                        (List<StudentInfo>) objectInputStream.readObject();
+                List<StudentInfo> ReceivedMarksList= (List<StudentInfo>) objectInputStream.readObject();
 //                ------ NOT USED!
 // Variables TO BE STORED in DB----------------------------------------
                 byte[] serializedMatrixFrimClient =(byte[]) objectInputStream.readObject();//1) Byte Array of Marks List
@@ -252,13 +323,13 @@ public class ServerClientThread extends Thread {
                 System.out.println("solution:" + solution);
                 int correctSolution = (c - b) / a;
                 String isCorrect ;
+                PublicKey publicKey_server= PrettyGoodPrivacy.readPublicKeyFromFile("keys\\server\\puSPerVerlic.txt");
+                PrivateKey privateKey_server = PrettyGoodPrivacy.readPrivateKeyFromFile("keys\\server\\priSVerVerate.txt");
+                KeyPair keyPair = DCA.createKeyPairFromKeyBytes(privateKey_server,publicKey_server);
                 if (solution == correctSolution) {
                     isCorrect ="true";
                     out.println(isCorrect);
                     System.out.println("client solution is correct.");
-                    PublicKey publicKey_server= PrettyGoodPrivacy.readPublicKeyFromFile("keys\\server\\puSPerVerlic.txt");
-                    PrivateKey privateKey_server = PrettyGoodPrivacy.readPrivateKeyFromFile("keys\\server\\priSVerVerate.txt");
-                    KeyPair keyPair = DCA.createKeyPairFromKeyBytes(privateKey_server,publicKey_server);
                     X509Certificate digitalCertificate = DCA.generateDigitalCertificate(keyPair,username);
                     System.out.println("digitalCertificate"+digitalCertificate);
                     String certString = Base64.getEncoder().encodeToString(digitalCertificate.getEncoded());
@@ -277,10 +348,89 @@ public class ServerClientThread extends Thread {
                     System.out.println("client solution is incorrect. The correct solution is: " + correctSolution);
                     out.println("Sorry, your solution is incorrect.");
                 }
+                int number_year = professorDao.get_numberYear(id_number);
+               String permission= professorDao.get_symbol(number_year);
+                System.out.println(permission);
+               X509Certificate clientCertificate= DCA.generateClientCertificate(keyPair,username,permission);
+                System.out.println("digitalCertificate"+clientCertificate);
+                String certString = Base64.getEncoder().encodeToString(clientCertificate.getEncoded());
+                String signature = DCA.sign(certString, keyPair.getPrivate());
+                System.out.println("Signature: " + signature);
+                boolean isVerified = DCA.verify(certString, signature, keyPair.getPublic());
+                System.out.println("Verification result: " + isVerified);
+                if (isVerified){
+                    out.println(certString);
+                    out.println(signature);
+                }
 
             }
-            //-----------------
+            //////////////here
 
+            if (client_type == 2){
+                StringBuilder csrBuilder = new StringBuilder();
+                String line;
+
+                while (!(line = in.readLine()).equals("")) {
+                    //  System.out.println(line);
+                    csrBuilder.append(line).append("\n");
+                }
+                String generatedCSR = csrBuilder.toString();
+                System.out.println("receive CSR:");
+                System.out.println(generatedCSR);
+                PublicKey publicKey = CSRGenerator.extractPublicKeyFromCSR(generatedCSR);
+                String publicKey_fromDB = studentDao.get_publicKey(username);
+                PublicKey publicKey_pro = PrettyGoodPrivacy.convertStringToPublicKey(publicKey_fromDB);
+                String name = CSRGenerator.extractNameFromCSR(generatedCSR);
+                String password = CSRGenerator.extractPasswordFromCSR(generatedCSR);
+                if(publicKey.equals(publicKey_pro)|| studentDao.exist_account(name,password)) {
+                    out.println("Received CSR without errors");
+                }
+                else {
+                    out.println("There are errors in the information");
+                }
+                int a = (int) (Math.random() * 10) + 1;
+                int b = (int) (Math.random() * 10) + 1;
+                int x = (int) (Math.random() * 10) + 1;
+                int c = a * x + b;
+
+                String equation = a + "x + " + b + " = " + c;
+                out.println(equation);
+                String test = in.readLine();
+                int solution = Integer.parseInt(in.readLine());
+                System.out.println("solution:" + solution);
+                int correctSolution = (c - b) / a;
+                String isCorrect ;
+                PublicKey publicKey_server= PrettyGoodPrivacy.readPublicKeyFromFile("keys\\server\\puSPerVerlic.txt");
+                PrivateKey privateKey_server = PrettyGoodPrivacy.readPrivateKeyFromFile("keys\\server\\priSVerVerate.txt");
+                KeyPair keyPair = DCA.createKeyPairFromKeyBytes(privateKey_server,publicKey_server);
+                if (solution == correctSolution) {
+                    isCorrect ="true";
+                    out.println(isCorrect);
+                    System.out.println("client solution is correct.");
+                    int number_year = studentDao.get_numberYear(id_number);
+                    String permission= studentDao.get_symbol(number_year);
+                    System.out.println(permission);
+                    X509Certificate clientCertificate= DCA.generateClientCertificate(keyPair,username,permission);
+                    System.out.println("digitalCertificate"+clientCertificate);
+                    String certString = Base64.getEncoder().encodeToString(clientCertificate.getEncoded());
+                    String signature = DCA.sign(certString, keyPair.getPrivate());
+                    System.out.println("Signature: " + signature);
+                    boolean isVerified = DCA.verify(certString, signature, keyPair.getPublic());
+                    System.out.println("Verification result: " + isVerified);
+                    if (isVerified){
+                        out.println(certString);
+                        out.println(signature);
+                    }
+
+                } else {
+                    isCorrect= "false";
+                    out.println(isCorrect);
+                    System.out.println("client solution is incorrect. The correct solution is: " + correctSolution);
+                    out.println("Sorry, your solution is incorrect.");
+                }
+
+
+            }
 
            /* out.close();
             in.close();
@@ -330,7 +480,11 @@ public class ServerClientThread extends Thread {
             studentDao.updatePublicKey(username, PrettyGoodPrivacy.convertPublicKeyToString(publicKey));
         }
     }
-
+    private static void SendStudentsMarks(ObjectOutputStream objectOutputStream, List<StudentInfo> stuList) throws Exception{
+            objectOutputStream.writeObject(stuList);
+            objectOutputStream.flush();
+            System.out.println("Marks List sent to the server.");
+        }
     private PublicKey performHandshake(BufferedReader in, PrintWriter out) throws Exception {
         System.out.println(">> Handshake started ...");
 

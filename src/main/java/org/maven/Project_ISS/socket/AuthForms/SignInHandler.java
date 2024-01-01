@@ -44,7 +44,6 @@ public class SignInHandler {
             ServerClientThread.client_type=1;
             Professor professor = new Professor(0,name,password,null,0,0);
             professorDao.save(professor,id_number);
-            System.out.println("saaaaaaaaaaaavvvvvvvvvvveeee PPPPPPPPPPP");
             System.out.println("Client: Sign in successful for " + name );
             isLogged="true";
 //            out.println(isLogged);

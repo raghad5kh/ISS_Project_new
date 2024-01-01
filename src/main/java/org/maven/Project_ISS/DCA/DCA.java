@@ -79,6 +79,31 @@ public class DCA {
 
         return new JcaX509CertificateConverter().getCertificate(certHolder);
     }
+    public static X509Certificate generateClientCertificate(KeyPair keyPair, String name,String permission) throws Exception {
+        X500Name issuer = new X500Name("CN=MyCA");
+        X500Name subject = new X500Name("CN=" + name+permission);
+        // BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss'Z'");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        Date notBefore = dateFormat.parse("20230101000000Z"); // تاريخ البداية
+        Date notAfter = dateFormat.parse("20241231235959Z"); // تاريخ الانتهاء
+
+        BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
+        JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(
+                issuer,
+                serial,
+                notBefore,
+                notAfter,
+                subject,
+                keyPair.getPublic()
+        );
+
+        ContentSigner contentSigner = new JcaContentSignerBuilder("SHA256WithRSA").build(keyPair.getPrivate());
+        X509CertificateHolder certHolder = certBuilder.build(contentSigner);
+
+        return new JcaX509CertificateConverter().getCertificate(certHolder);
+    }
 
 
     public static void saveCertificate(String filePath, X509Certificate certificate) throws Exception {

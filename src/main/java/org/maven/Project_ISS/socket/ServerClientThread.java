@@ -99,17 +99,16 @@ public class ServerClientThread extends Thread {
 
 
                 System.out.println("address: " + address);
-
                 String address_after_decrypt = AsymmetricEncryption.decrypt(address, key);
+                System.out.println("address_after_decrypt:"+address_after_decrypt);
                 String phone_number = in.readLine();
-
                 System.out.println("phone_number: " + phone_number);
                 int phone_number_after_decrypt = Integer.parseInt(AsymmetricEncryption.decrypt(phone_number, key));
+                System.out.println("phone_number_after_decrypt:"+phone_number_after_decrypt);
                 String mobile_number = in.readLine();
-
                 System.out.println("mobile_number: " + mobile_number);
-
                 int mobile_number_after_decrypt = Integer.parseInt(AsymmetricEncryption.decrypt(mobile_number, key));
+                System.out.println("mobile_number_after_decrypt:"+mobile_number_after_decrypt);
                 int id = studentDao.get_id(name);
                 if (id == 0) {
                     id = professorDao.get_id(name);
@@ -119,7 +118,7 @@ public class ServerClientThread extends Thread {
                     Student student = new Student(id, name, password, address_after_decrypt, phone_number_after_decrypt, mobile_number_after_decrypt);
                     studentDao.update(student);
                 }
-                String message = "The information completion stage has been completed";
+                String message = "Dear" + username + ",your information has been received";
                 String message_after = AsymmetricEncryption.encrypt(message, key);
                 System.out.println("done information : " + message);
                 out.println(message_after);
@@ -210,7 +209,7 @@ public class ServerClientThread extends Thread {
                     Pattern pattern1 = Pattern.compile("CN=([^(]+)");
                     Matcher matcher2 = pattern1.matcher(subject);
                     System.out.println(subject);
-                        String result2 = matcher2.group(1);
+                    String result2 = matcher2.group(1);
                     if (DCA.isCertificateValid(clientCertificate)&& result2.equals(username)) {
                         out.println("The certificate is valid");
                         String permission = professorDao.get_permission("(" + result + ")");

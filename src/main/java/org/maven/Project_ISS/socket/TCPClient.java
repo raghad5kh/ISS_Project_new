@@ -114,15 +114,18 @@ public class TCPClient {
                     }
 
                     String serverMessage3 = in.readLine();
-                    StudentDao studentDao = new StudentDaoImpl();
-                    ProfessorDao professorDao = new ProfessorDaoImpl();
-                    String key = studentDao.get_national_number(id_number);
-                    if (key == null) {
-                        key = professorDao.get_national_number(id_number);
+
+                    String key ;
+                    if(clientMessage.equals("1")){
+                        key = AsymmetricEncryption.readNational_numberFromFile("national_numbers\\client\\Professor\\national_number_" + id_number +".txt");
+                    }
+                    else {
+                        key=AsymmetricEncryption.readNational_numberFromFile("national_numbers\\client\\Student\\national_number_" + id_number +".txt");
                     }
                     national_number = key;
                     String serverMessage3_after_decrypt = AsymmetricEncryption.decrypt(serverMessage3, key);
-                    System.out.println("Server response: " + serverMessage3_after_decrypt);
+                    System.out.println("Server response: " + serverMessage3);
+                    System.out.println("Server response after decrypt: " + serverMessage3_after_decrypt);
                     System.out.println("--start generate kesy --");
 
                     // generate pair key

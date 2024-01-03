@@ -14,11 +14,7 @@ public class UserInfo {
     }
 
     public  void StudentInfo(PrintWriter out, Scanner scanner, String clientIPAddress, int clientPortNumber, int id_number, String name, String password) throws Exception {
-
-        StudentDao studentDao = new StudentDaoImpl();
-
-
-        String key = studentDao.get_national_number(id_number);
+       String key = AsymmetricEncryption.readNational_numberFromFile("national_numbers\\client\\Student\\national_number_" + id_number +".txt");
         String address;
         int phone_number;
         int mobile_number;
@@ -54,10 +50,9 @@ public class UserInfo {
 
     public  void ProfessorInfo(PrintWriter out, Scanner scanner, String clientIPAddress, int clientPortNumber, int id_number, String name, String password) throws Exception {
 
-        ProfessorDao professorDao = new ProfessorDaoImpl();
 
 
-        String key = professorDao.get_national_number(id_number);
+        String key = AsymmetricEncryption.readNational_numberFromFile("national_numbers\\client\\Professor\\national_number_" + id_number +".txt");
         String address;
         int phone_number;
         int mobile_number;

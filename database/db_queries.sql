@@ -73,10 +73,10 @@ INSERT INTO list_data(id_number,national_number,type,number_year) VALUES (53227,
 INSERT INTO list_data(id_number,national_number,type,number_year) VALUES (53228,"0106523665387099","p",2);
 
 
-INSERT INTO list_data(id_number,national_number,type,number_year) VALUES (53229,"0106523865387088","s",3);
-INSERT INTO list_data(id_number,national_number,type,number_year) VALUES (54221,"0106523665387777","s",3);
-INSERT INTO list_data(id_number,national_number,type,number_year) VALUES (54222,"0106523865387088","p",3);
-INSERT INTO list_data(id_number,national_number,type,number_year) VALUES (54223,"0106523665387777","p",3);
+INSERT INTO list_data(id_number,national_number,type,number_year) VALUES (53229,"0106593865387018","s",3);
+INSERT INTO list_data(id_number,national_number,type,number_year) VALUES (54221,"0106523665387879","s",3);
+INSERT INTO list_data(id_number,national_number,type,number_year) VALUES (54222,"0106523845387086","p",3);
+INSERT INTO list_data(id_number,national_number,type,number_year) VALUES (54223,"0106528665387747","p",3);
 
 INSERT INTO list_data(id_number,national_number,type,number_year) VALUES (54224,"0106523865387088","s",4);
 INSERT INTO list_data(id_number,national_number,type,number_year) VALUES (54225,"0106523665387777","s",4);

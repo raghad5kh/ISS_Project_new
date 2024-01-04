@@ -118,7 +118,7 @@ public class ServerClientThread extends Thread {
                     Student student = new Student(id, name, password, address_after_decrypt, phone_number_after_decrypt, mobile_number_after_decrypt);
                     studentDao.update(student);
                 }
-                String message = "Dear" + username + ",your information has been received";
+                String message = "Dear " + username + ",your information has been received";
                 String message_after = AsymmetricEncryption.encrypt(message, key);
                 System.out.println("done information : " + message);
                 out.println(message_after);

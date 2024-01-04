@@ -24,13 +24,13 @@ public class StudentClient {
                     System.out.println("LogIn Start...");
                     out.println("LogIn");
                     TCPClient.type=1;
-                    commonDetails.processCommonUserDetails_login(out, scanner,clientIPAddress,clientPortNumber);
+                    commonDetails.processCommonUserDetails_login(out, scanner);
                     break;
                 case "2":
                     System.out.println("SignIn Start...");
                     out.println("SignIn");
                     TCPClient.type=2;
-                    commonDetails.signin_processCommonStudentDetails(out, scanner,clientIPAddress,clientPortNumber);
+                    commonDetails.signin_processCommonStudentDetails(out, scanner);
 
             }
 

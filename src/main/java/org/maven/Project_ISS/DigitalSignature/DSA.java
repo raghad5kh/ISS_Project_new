@@ -26,7 +26,9 @@ public class DSA {
         verifier.initVerify(publicKey);
         verifier.update(message);
         return verifier.verify(signature);
-    }}
+    }
+
+}
 
 
 

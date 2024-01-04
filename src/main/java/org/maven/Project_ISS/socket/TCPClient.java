@@ -42,8 +42,8 @@ public class TCPClient {
     public static  List<StudentInfo> studentList = new ArrayList<>();
 
     public static boolean isValid=true;
-    static String clientIPAddress;
-    static int clientPortNumber;
+   public static String clientIPAddress;
+  public   static int clientPortNumber;
     static ProfessorClient professorClient = new ProfessorClient();
     static StudentClient studentClient = new StudentClient();
     static commonDetails commonDetails = new commonDetails();
@@ -53,7 +53,16 @@ public class TCPClient {
     static UserInfo userInfo = new UserInfo();
 
     private static String sessionKey;
-
+    private static String getUserInput(String prompt) {
+        System.out.print(prompt);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        try {
+            return reader.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
         StudentMarks studentMarks = new StudentMarks();
@@ -68,14 +77,18 @@ public class TCPClient {
 //        DigitalSignatureExample digitalSignatureExample = new DigitalSignatureExample();
 //         students_marks_msg = studentMarks.getmessageByte(studentList);
 //        byte[] sign_message ;
+
         try {
+            String ipAddress = getUserInput("Enter IP address: ");
+            int portNumber = Integer.parseInt(getUserInput("Enter port number: "));
             Socket socket = new Socket("127.0.0.1", 8888);
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+            PublicKey publicKey_server= PrettyGoodPrivacy.readPublicKeyFromFile("keys\\server\\puSPerVerlic.txt");
 
-            getClientDetails(socket);
+//            getClientDetails(socket);
 
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             String clientMessage = "";
@@ -88,7 +101,9 @@ public class TCPClient {
             clientMessage = br.readLine();
             System.out.println("User entered for role: " + clientMessage);
 
-            processUserRole(clientMessage, out, in,scanner);
+            out.println(ipAddress);
+            out.println(portNumber);
+           processUserRole(clientMessage, out, in,scanner);
 //            String isLogged=in.readLine();
             String serverMessage = in.readLine();
             System.out.println("Server response: " + serverMessage);
@@ -208,9 +223,10 @@ public class TCPClient {
                 }
                 if(isValid==true){
                 PrivateKey privateKey = PrettyGoodPrivacy.readPrivateKeyFromFile(privateKeyPath);
+                String PrivateKeyAsString=PrettyGoodPrivacy.privateKeyToString(privateKey);
                 PublicKey publicKey = PrettyGoodPrivacy.readPublicKeyFromFile(publicKeyPath);
                 System.out.println("publicKey" + publicKey);
-
+                     //---------------Question 4-------------
                 if (clientMessage.equals("1")) {
                     //entered as Professor
 //                    if (isLogged.equals("true")) {

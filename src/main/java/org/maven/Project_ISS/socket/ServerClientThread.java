@@ -47,25 +47,32 @@ public class ServerClientThread extends Thread {
             PrintWriter out = new PrintWriter(serverClient.getOutputStream(), true);
             ObjectInputStream objectInputStream = new ObjectInputStream(serverClient.getInputStream());
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(serverClient.getOutputStream());
-            DSA dsa=new DSA();            // Read client request
+            DSA dsa=new DSA();
+
+            String ClientIPAddress = in.readLine();
+            System.out.println("ClientIPAddress: " + ClientIPAddress);
+            int ClientPortNumber = Integer.parseInt(in.readLine());
+            System.out.println("ClientPortNumber: " + ClientPortNumber);            // Read client request
             String request = in.readLine();
             StudentMarks studentMarks = new StudentMarks();
             System.out.println("Request: " + request);
-
+            PublicKey publicKey_server= PrettyGoodPrivacy.readPublicKeyFromFile("keys\\server\\puSPerVerlic.txt");
+            PrivateKey privateKey_server = PrettyGoodPrivacy.readPrivateKeyFromFile("keys\\server\\priSVerVerate.txt");
 
             // Handling client's request
             if (request.contains("LogIn")) {
 
                 System.out.println(request);
+
                 String name = in.readLine();
                 System.out.println("Name: " + name);
                 username = name;
                 String password = in.readLine();
                 System.out.println("Password: " + password);
 
-                String IPAddress = in.readLine();
-                int PortNumber = Integer.parseInt(in.readLine());
-                System.out.println("Client : " + name + " send request with IPAddress :" + IPAddress + " and Port Number =" + PortNumber);
+//                String IPAddress = in.readLine();
+//                int PortNumber = Integer.parseInt(in.readLine());
+                System.out.println("Client : " + name + " send request with IPAddress :" + ClientIPAddress + " and Port Number =" + ClientPortNumber);
 
                 new LoginHandler(out, studentDao, professorDao).handleLogin(name, password);
 
@@ -76,6 +83,7 @@ public class ServerClientThread extends Thread {
 
             if (request.contains("SignIn")) {
                 System.out.println(request);
+
                 id_number = Integer.parseInt(in.readLine());
                 System.out.println("id_number: " + id_number);
                 String name = in.readLine();
@@ -84,9 +92,9 @@ public class ServerClientThread extends Thread {
                 String password = in.readLine();
                 System.out.println("Password: " + password);
 
-                String IPAddress = in.readLine();
-                int PortNumber = Integer.parseInt(in.readLine());
-                System.out.println("Client : " + name + " send request with IPAddress :" + IPAddress + " and Port Number =" + PortNumber);
+//                String IPAddress = in.readLine();
+//                int PortNumber = Integer.parseInt(in.readLine());
+                System.out.println("Client : " + name + " send request with IPAddress :" + ClientIPAddress + " and Port Number =" + ClientPortNumber);
 
                 new SignInHandler(out, studentDao, professorDao).handleSignIn(id_number, name, password);
 
@@ -233,13 +241,13 @@ public class ServerClientThread extends Thread {
                 String publicKeyString = professorDao.get_publicKey(username);
                 PublicKey publicKey= PrettyGoodPrivacy.convertStringToPublicKey(publicKeyString);
                 System.out.println("Client publicKey"+publicKey);
-                List<StudentInfo> DecodedMarksList= new ArrayList<StudentInfo>();
+                List<StudentInfo> DecodedMarksList;
 //                ------ NOT USED!
                 List<StudentInfo> ReceivedMarksList= (List<StudentInfo>) objectInputStream.readObject();
 //                ------ NOT USED!
 // Variables TO BE STORED in DB----------------------------------------
                 byte[] serializedMatrixFrimClient =(byte[]) objectInputStream.readObject();//1) Byte Array of Marks List
-               // byte[] DecryptedserializedMatrixFrimClient= AsymmetricEncryption.decryptByteList(serializedMatrixFrimClient,sessionkey);
+                // byte[] DecryptedserializedMatrixFrimClient= AsymmetricEncryption.decryptByteList(serializedMatrixFrimClient,sessionkey);
                 DecodedMarksList=studentMarks.convertBytesToList(serializedMatrixFrimClient);//2) convert byte arr into list<StudentInfo>
                 System.out.println("ReceivedMarksList");
                 studentMarks.getStudentsWithMarks(DecodedMarksList);
@@ -322,8 +330,7 @@ public class ServerClientThread extends Thread {
                 System.out.println("solution:" + solution);
                 int correctSolution = (c - b) / a;
                 String isCorrect ;
-                PublicKey publicKey_server= PrettyGoodPrivacy.readPublicKeyFromFile("keys\\server\\puSPerVerlic.txt");
-                PrivateKey privateKey_server = PrettyGoodPrivacy.readPrivateKeyFromFile("keys\\server\\priSVerVerate.txt");
+
                 KeyPair keyPair = DCA.createKeyPairFromKeyBytes(privateKey_server,publicKey_server);
                 if (solution == correctSolution) {
                     isCorrect ="true";
@@ -399,8 +406,8 @@ public class ServerClientThread extends Thread {
                 System.out.println("solution:" + solution);
                 int correctSolution = (c - b) / a;
                 String isCorrect ;
-                PublicKey publicKey_server= PrettyGoodPrivacy.readPublicKeyFromFile("keys\\server\\puSPerVerlic.txt");
-                PrivateKey privateKey_server = PrettyGoodPrivacy.readPrivateKeyFromFile("keys\\server\\priSVerVerate.txt");
+//                PublicKey publicKey_server= PrettyGoodPrivacy.readPublicKeyFromFile("keys\\server\\puSPerVerlic.txt");
+//                PrivateKey privateKey_server = PrettyGoodPrivacy.readPrivateKeyFromFile("keys\\server\\priSVerVerate.txt");
                 KeyPair keyPair = DCA.createKeyPairFromKeyBytes(privateKey_server,publicKey_server);
                 if (solution == correctSolution) {
                     isCorrect ="true";

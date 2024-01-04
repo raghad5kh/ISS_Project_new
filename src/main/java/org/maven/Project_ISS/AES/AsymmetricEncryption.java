@@ -1,14 +1,11 @@
 package org.maven.Project_ISS.AES;
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
+import javax.crypto.*;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.security.Key;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import java.security.*;
 import java.util.Base64;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
@@ -17,7 +14,7 @@ public class AsymmetricEncryption {
     private static  String ALGORITHM = "AES";
 
 
-    public static String encrypt(String plainText,String KEY) throws Exception {
+   /* public static String encrypt(String plainText,String KEY) throws Exception {
         byte[] key = KEY.getBytes(StandardCharsets.UTF_8);
         SecretKeySpec secretKey = new SecretKeySpec(key, ALGORITHM);
      //   SecretKeySpec secretKey = new SecretKeySpec(KEY.getBytes(), ALGORITHM);
@@ -25,15 +22,73 @@ public class AsymmetricEncryption {
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
         byte[] encryptedBytes = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
         return Base64.getEncoder().encodeToString(encryptedBytes);
-    }
+    }*/
+   public static String encrypt(String plaintext, String key) throws NoSuchAlgorithmException,
+           NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException,
+           IllegalBlockSizeException, BadPaddingException {
+       // Generate a random IV (Initialization Vector)
+       SecureRandom random = new SecureRandom();
+       byte[] iv = new byte[12];
+       random.nextBytes(iv);
 
-    public static String decrypt(String encryptedText,String KEY) throws Exception {
+       // Create the GCM parameter specification
+       GCMParameterSpec parameterSpec = new GCMParameterSpec(128, iv);
+
+       // Convert the key string to a SecretKey object
+       SecretKey secretKey = new SecretKeySpec(key.getBytes(), "AES");
+
+       // Create the cipher instance with GCM mode and AES algorithm
+       Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+       cipher.init(Cipher.ENCRYPT_MODE, secretKey, parameterSpec);
+
+       // Encrypt the plaintext
+       byte[] ciphertext = cipher.doFinal(plaintext.getBytes());
+
+       // Concatenate the IV and ciphertext
+       byte[] result = new byte[iv.length + ciphertext.length];
+       System.arraycopy(iv, 0, result, 0, iv.length);
+       System.arraycopy(ciphertext, 0, result, iv.length, ciphertext.length);
+
+       // Convert the encrypted data to a Base64-encoded string
+       return Base64.getEncoder().encodeToString(result);
+   }
+
+
+
+
+    /*  public static String decrypt(String encryptedText,String KEY) throws Exception {
         SecretKeySpec secretKey = new SecretKeySpec(KEY.getBytes(), ALGORITHM);
         Cipher cipher = Cipher.getInstance(ALGORITHM);
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
         byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedText));
         return new String(decryptedBytes);
+    }*/
+    public static String decrypt(String ciphertext, String key) throws NoSuchAlgorithmException,
+            NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException,
+            IllegalBlockSizeException, BadPaddingException {
+        // Decode the Base64-encoded ciphertext
+        byte[] encryptedData = Base64.getDecoder().decode(ciphertext);
+
+        // Extract the IV from the ciphertext
+        byte[] iv = new byte[12];
+        System.arraycopy(encryptedData, 0, iv, 0, iv.length);
+
+        // Convert the key string to a SecretKey object
+        SecretKey secretKey = new SecretKeySpec(key.getBytes(), "AES");
+
+        // Create the GCM parameter specification
+        GCMParameterSpec parameterSpec = new GCMParameterSpec(128, iv);
+
+        // Create the cipher instance with GCM mode and AES algorithm
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, parameterSpec);
+
+        // Decrypt the ciphertext
+        byte[] decryptedText = cipher.doFinal(encryptedData, iv.length, encryptedData.length - iv.length);
+
+        return new String(decryptedText);
     }
+
     public static byte[] encryptByteList(byte[] plainBytes, String KEY) throws Exception {
         byte[] key = KEY.getBytes(StandardCharsets.UTF_8);
         SecretKeySpec secretKey = new SecretKeySpec(key, ALGORITHM);

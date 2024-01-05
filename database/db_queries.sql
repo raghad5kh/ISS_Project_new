@@ -59,7 +59,7 @@ CREATE TABLE permission (
 
 INSERT INTO permission(name,symbol,number_year,nameTable) VALUES ("view English_marks year1","(VEY1)",1,"English");
 INSERT INTO permission(name,symbol,number_year,nameTable) VALUES ("view Programming_marks year2","(VPY2)",2,"Programming");
-INSERT INTO permission(name,symbol,number_year,nameTable) VALUES ("view programming_languages_marks year3","(VPLY3)",3,"programming_languages");
+INSERT INTO permission(name,symbol,number_year,nameTable) VALUES ("view Database2_marks year3","(VDY3)",3,"Database2");
 INSERT INTO permission(name,symbol,number_year,nameTable) VALUES ("view Software_engineering_marks year4","(VSEY4)",4,"Software_engineering");
 
 INSERT INTO list_data(id_number,national_number,type,number_year) VALUES (53221,"0173456789287654","s",1);
@@ -106,16 +106,13 @@ INSERT INTO Programming(name,mark) VALUES("rama",80);
 INSERT INTO Programming(name,mark) VALUES("alaa",92);
 INSERT INTO Programming(name,mark) VALUES("touka",88);
 
-CREATE TABLE programming_languages (
-  id INT(15) PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR(30) ,
-  mark VARCHAR(8)
-);
-INSERT INTO programming_languages(name,mark) VALUES("raghad",88);
-INSERT INTO programming_languages(name,mark) VALUES("saja",77);
-INSERT INTO programming_languages(name,mark) VALUES("rama",100);
-INSERT INTO programming_languages(name,mark) VALUES("alaa",96);
-INSERT INTO programming_languages(name,mark) VALUES("touka",87);
+
+CREATE TABLE Database2 (  id INT(15) PRIMARY KEY AUTO_INCREMENT,  name VARCHAR(30) ,  mark VARCHAR(8));
+INSERT INTO Database2(name,mark) VALUES("raghad",88);
+INSERT INTO Database2(name,mark) VALUES("saja",77);
+INSERT INTO Database2(name,mark) VALUES("rama",100);
+INSERT INTO Database2(name,mark) VALUES("alaa",96);
+INSERT INTO Database2(name,mark) VALUES("touka",87);
 
 CREATE TABLE Software_engineering (
   id INT(15) PRIMARY KEY AUTO_INCREMENT,

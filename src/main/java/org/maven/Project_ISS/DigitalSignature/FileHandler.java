@@ -31,19 +31,5 @@ public class FileHandler {
         }
     }
 
-//    public void ChooseDirectory () throws IOException {
-//        Scanner scanner = new Scanner(System.in);
-//
-//        // Ask the user for the directory path
-//        System.out.print("Enter the directory path to save the file: ");
-//        String directoryPath = scanner.nextLine();
-//
-//        // Specify the filename
-//        String fileName = "output.txt";
-//
-//        // Call the function to save text to file
-//        saveTextToFile(directoryPath, fileName, textToSave);
-//
-//        scanner.close();
-//    }
+
 }

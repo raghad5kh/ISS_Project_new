@@ -17,20 +17,5 @@ public class PasswordHashing {
         return BCrypt.checkpw(candidate, hashedPassword);
     }
 
-//    public static void main(String[] args) {
-//        // Example usage
-//        String originalPassword = "mySecretPassword";
-//
-//        // Hash the password before storing it
-//        String hashedPassword = hashPassword(originalPassword);
-//        System.out.println("Hashed Password: " + hashedPassword);
-//
-//        // Check if a provided password matches the stored hash
-//        String candidatePassword = "mySecretPassword";
-//        if (checkPassword(candidatePassword, hashedPassword)) {
-//            System.out.println("Password is correct!");
-//        } else {
-//            System.out.println("Incorrect password.");
-//        }
-//    }
+
 }

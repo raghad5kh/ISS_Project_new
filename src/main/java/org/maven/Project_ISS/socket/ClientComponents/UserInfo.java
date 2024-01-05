@@ -38,10 +38,6 @@ public class UserInfo {
         String mobile_number_after_encrypt = AsymmetricEncryption.encrypt(String.valueOf(mobile_number),key);
         out.println(mobile_number_after_encrypt);
 
-      /*  if(studentDao.exist(id_number)) {
-            Student student = new Student(0,name,password,address_after,phone_number_after,mobile_number_after);
-            studentDao.save(student);}*/
-//        getClientDetails(out,clientIPAddress,clientPortNumber);
 
         out.flush();
     }
@@ -75,8 +71,6 @@ public class UserInfo {
         System.out.println("Your mobile_number: " + mobile_number);
         String mobile_number_after_encrypt = AsymmetricEncryption.encrypt(String.valueOf(mobile_number),key);
         out.println(mobile_number_after_encrypt);
-
-//        getClientDetails(out,clientIPAddress,clientPortNumber);
 
         out.flush();
     }

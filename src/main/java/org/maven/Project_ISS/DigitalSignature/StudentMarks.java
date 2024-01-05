@@ -14,24 +14,6 @@ public class StudentMarks {
     int mark ;
     StudentInfo student = new  StudentInfo(name,mark);
 
-    public  void MakeCoiceToEntermarks(){
-        System.out.println("Do you want to enter student marks"+"\n" +
-                "1. Yes\n" +
-                "2. No");
-        int answer = scanner.nextInt();
-        switch (answer){
-            case 1 :
-                EnterMarks();
-                TCPClient.isEntered=true;
-            break;
-            case 2:
-                break;
-            default:
-
-                System.out.print("THAT'S NOT ALLOWED! ");
-
-        }
-    }
 
     public  List<StudentInfo> getStudentsWithMarks(List<StudentInfo> students) {
         List<StudentInfo> studentsWithMarks = new ArrayList<>();
@@ -42,13 +24,6 @@ public class StudentMarks {
         }
 
         return studentsWithMarks;
-    }
-    public byte[] getmessageByte(List<StudentInfo> studentList_){
-        byte[] students_marks;
-//        List<Student> students = new ArrayList<>();
-        students_marks=getStudentsWithMarks(studentList_).toString().getBytes();
-        System.out.println("getmessageByte"+ "\t"+Arrays.toString(students_marks));
-        return  students_marks;
     }
 
     // A method that takes a list of student info objects and returns an array of bytes
@@ -106,10 +81,6 @@ public class StudentMarks {
             int marks = scanner.nextInt();
             studentList.add(new StudentInfo(studentName, marks));
             System.out.println("\nStudents with Marks:");
-            List<StudentInfo> studentsWithMarks = getStudentsWithMarks(studentList);
-//            for (StudentInfo student : studentsWithMarks) {
-//                System.out.println("Name: " + student.getName() + ", Marks: " + student.getMarks());
-//            }
         }
       return studentList;
 

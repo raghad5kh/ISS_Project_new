@@ -68,8 +68,6 @@ public class ServerClientThread extends Thread {
                 username = name;
                 String password = in.readLine();
                 System.out.println("Password: " + password);
-//                String IPAddress = in.readLine();
-//                int PortNumber = Integer.parseInt(in.readLine());
                 System.out.println("Client : " + name + " send request with IPAddress :" + ClientIPAddress + " and Port Number =" + ClientPortNumber);
                 new LoginHandler(out, studentDao, professorDao).handleLogin(name, password);
 
@@ -90,8 +88,6 @@ public class ServerClientThread extends Thread {
                 String hashedPassword = passwordHashing.hashPassword(password);
                 System.out.println("hashedPassword: " + hashedPassword);
 
-//                String IPAddress = in.readLine();
-//                int PortNumber = Integer.parseInt(in.readLine());
                 System.out.println("Client : " + name + " send request with IPAddress :" + ClientIPAddress + " and Port Number =" + ClientPortNumber);
 
                 new SignInHandler(out, studentDao, professorDao).handleSignIn(id_number, name, hashedPassword);
@@ -118,10 +114,10 @@ public class ServerClientThread extends Thread {
                 int id = studentDao.get_id(name);
                 if (id == 0) {
                     id = professorDao.get_id(name);
-                    Professor professor = new Professor(id, name, password, address_after_decrypt, phone_number_after_decrypt, mobile_number_after_decrypt);
+                    Professor professor = new Professor(id, name, hashedPassword, address_after_decrypt, phone_number_after_decrypt, mobile_number_after_decrypt);
                     professorDao.update(professor);
                 } else {
-                    Student student = new Student(id, name, password, address_after_decrypt, phone_number_after_decrypt, mobile_number_after_decrypt);
+                    Student student = new Student(id, name, hashedPassword, address_after_decrypt, phone_number_after_decrypt, mobile_number_after_decrypt);
                     studentDao.update(student);
                 }
                 String message = "Dear " + username + ",your information has been received";
@@ -436,9 +432,6 @@ public class ServerClientThread extends Thread {
 
             }
 
-           /* out.close();
-            in.close();
-            serverClient.close();*/
 
         } catch (Exception ex) {
             System.out.println(ex.getMessage());

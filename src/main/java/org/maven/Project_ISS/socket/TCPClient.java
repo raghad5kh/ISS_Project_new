@@ -71,19 +71,11 @@ public class TCPClient {
     public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in);
         StudentMarks studentMarks = new StudentMarks();
-//        byte[] students_marks_msg;
-//        ArrayList students_mark_list;
         String publicKeyPath = "";
         String privateKeyPath = "";
-        String signMessageReceived = "";
         int id_number;
         String national_number;
         DSA dsa = new DSA();
-//        DigitalSignatureExample digitalSignatureExample = new DigitalSignatureExample();
-//         students_marks_msg = studentMarks.getmessageByte(studentList);
-//        byte[] sign_message ;
-
-
         Socket socket = null;
         try {
             String ipAddress = getUserInput("Enter IP address: ");
@@ -95,10 +87,6 @@ public class TCPClient {
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
-            PublicKey publicKey_server = PrettyGoodPrivacy.readPublicKeyFromFile("keys\\server\\puSPerVerlic.txt");
-
-//            getClientDetails(socket);
-
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             String clientMessage = "";
 
@@ -113,12 +101,10 @@ public class TCPClient {
             out.println(ipAddress);
             out.println(portNumber);
             processUserRole(clientMessage, out, in, scanner);
-//            String isLogged=in.readLine();
             String serverMessage = in.readLine();
             System.out.println("Server response: " + serverMessage);
             String compareString = "Your SignIn has been done successfully.";
-//            System.out.println("is Logged status: " + isLogged);
-//            if(isLogged.equals("true")) {
+
             System.out.println("---- isEntered----: " + isEntered);
             if (isEntered == true) {
                 if (type == 2) {
@@ -236,14 +222,11 @@ public class TCPClient {
                     System.out.println("publicKey" + publicKey);
                     //---------------Question 4-------------
                     if (clientMessage.equals("1")) {
-                        //entered as Professor
-//                    if (isLogged.equals("true")) {
                         List<StudentInfo> studentsWithMarks = studentMarks.EnterMarks();
                         byte[] serializedMatrix = studentMarks.convertListToBytes(studentsWithMarks);
                         byte[] signature = dsa.signMessage(serializedMatrix, privateKey);
                         System.out.println("Client publicKey =" + "\t" + publicKey);
                         byte[] signatureEncrypted = AsymmetricEncryption.encryptByteList(signature, sessionkey);
-//                    byte[] serializedMatrixEncrypted= AsymmetricEncryption.encryptByteList(serializedMatrix,sessionkey);
                         SendStudentsMarks(objectOutputStream, studentsWithMarks);
                         SignaturByteList(objectOutputStream, serializedMatrix);
                         SignaturByteList(objectOutputStream, signatureEncrypted);
@@ -256,16 +239,7 @@ public class TCPClient {
                         FileHandler.saveTextToFile(directoryPath, fileName, DecryptedResponse);
 
                         //----------------------------------
-//                    }
                     }
-//                signMessageReceived = in.readLine();
-//                if (signMessageReceived != null) {
-//                    System.out.println(signMessageReceived);
-//                }
-
-                    //send list of student's project
-
-
                     if (clientMessage.equals("2")) {
                         sendList(objectOutputStream);
                         //recieve ok message
@@ -376,9 +350,6 @@ public class TCPClient {
                     }
                 }
             }
-      /*      in.close();
-            out.close();
-            socket.close();*/
         } catch (IOException e) {
             // معالجة الاستثناء
         } catch (InvalidAlgorithmParameterException e) {
@@ -458,7 +429,6 @@ public class TCPClient {
 
 
             String csrPEM = CSRGenerator.convertToPEM(csr);
-            // System.out.println("Generated CSR:\n" + csrPEM);
             out.println(csrPEM);
 
 

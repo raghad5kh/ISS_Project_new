@@ -15,16 +15,6 @@ public class commonDetails {
         int id_number;
         String name;
         String password;
-//        System.out.println("Enter your IP Address");
-//        String ip_address = scanner.next();
-//        System.out.println("Your ip address: " + ip_address);
-//        out.println(ip_address);
-//        TCPClient.clientIPAddress=ip_address;
-//        System.out.println("Enter your port number");
-//        int port_number = Integer.parseInt(scanner.next());
-//        System.out.println("Your port number: " + port_number);
-//        out.println(port_number);
-//        TCPClient.clientPortNumber=port_number;
         System.out.println("Enter your id_number");
         id_number = Integer.parseInt(scanner.next());
         System.out.println("Your id_number: " + id_number);
@@ -41,7 +31,6 @@ public class commonDetails {
         System.out.println("Your password: " + password);
         out.println(password);
         TCPClient.PS=password;
-//        getClientDetails(out,clientIPAddress,clientPortNumber);
         if(studentDao.exist(id_number)){
         TCPClient.isEntered=true;}
         out.flush();
@@ -50,21 +39,9 @@ public class commonDetails {
 
     public  void signin_processCommonProfessorDetails(PrintWriter out, Scanner scanner) {
         ProfessorDao professorDao = new ProfessorDaoImpl();
-
-
         int id_number;
         String name;
         String password;
-//        System.out.println("Enter your IP Address");
-//        String ip_address = scanner.next();
-//        System.out.println("Your ip address: " + ip_address);
-//        out.println(ip_address);
-//        TCPClient.clientIPAddress=ip_address;
-//        System.out.println("Enter your port number");
-//        int port_number = Integer.parseInt(scanner.next());
-//        System.out.println("Your port number: " + port_number);
-//        out.println(port_number);
-//        TCPClient.clientPortNumber=port_number;
         System.out.println("Enter your id_number");
         id_number = Integer.parseInt(scanner.next());
         System.out.println("Your id_number: " + id_number);
@@ -80,17 +57,12 @@ public class commonDetails {
         System.out.println("Your password: " + password);
         out.println(password);
         TCPClient.PS=password;
-//        getClientDetails(out,clientIPAddress,clientPortNumber);
        if( professorDao.exist(id_number)) {
            TCPClient.isEntered = true;
        }
         out.flush();
     }
 
-    private static void getClientDetails(PrintWriter out , String clientIPAddress,int clientPortNumber ) {
-        out.println(clientIPAddress);
-        out.println(clientPortNumber);
-    }
     public  void processCommonUserDetails_login(PrintWriter out, Scanner scanner) {
 
         String name;
@@ -106,7 +78,6 @@ public class commonDetails {
         password = scanner.next();
         System.out.println("Your password: " + password);
         out.println(password);
-//        getClientDetails(out,clientIPAddress,clientPortNumber);
         String passwordFromDB_stu = studentDao.get_password(name);
         String passwordFromDB_pro = professorDao.get_password(name);
         PasswordHashing passwordHashing = new PasswordHashing();

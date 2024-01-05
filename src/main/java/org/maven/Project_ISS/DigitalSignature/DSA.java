@@ -7,6 +7,7 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 
 
@@ -26,6 +27,30 @@ public class DSA {
         verifier.initVerify(publicKey);
         verifier.update(message);
         return verifier.verify(signature);
+    }
+
+
+    public static String sign(String text, PrivateKey privateKey) throws Exception {
+        Signature signature = Signature.getInstance("SHA256withRSA");
+        signature.initSign(privateKey);
+        signature.update(text.getBytes());
+        byte[] signatureBytes = signature.sign();
+        return Base64.getEncoder().encodeToString(signatureBytes);
+    }
+
+    public static boolean verify(String text, String signature, PublicKey publicKey) throws Exception {
+        Signature verifier = Signature.getInstance("SHA256withRSA");
+        verifier.initVerify(publicKey);
+        verifier.update(text.getBytes());
+        byte[] signatureBytes = Base64.getDecoder().decode(signature);
+        return verifier.verify(signatureBytes);
+    }
+    public static byte[] signMessage(String message, PrivateKey privateKey) throws Exception {
+        byte[] messageBytes = message.getBytes("UTF-8");
+        Signature signature = Signature.getInstance("SHA256withRSA");
+        signature.initSign(privateKey);
+        signature.update(messageBytes);
+        return signature.sign();
     }
 
 }

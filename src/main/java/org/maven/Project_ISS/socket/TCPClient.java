@@ -54,6 +54,9 @@ public class TCPClient {
 
     public static String username;
     public static String PS;
+    public static String address_pro;
+    public static int mobile_number;
+    public static int phone_number;
     static UserInfo userInfo = new UserInfo();
 
     private static String sessionKey;
@@ -196,25 +199,6 @@ public class TCPClient {
                         studentMarks1.getStudentsWithMarks(ReceivedMarksList);
                     }
                 }
-                if (clientMessage.equals("2") && type == 1) {
-                    String messageFinal = in.readLine();
-                    System.out.println(messageFinal);
-                    String path_stu = scanner.next();
-                    out.println(path_stu);
-                    String ok = in.readLine();
-                    System.out.println(ok);
-                    if (ok.equals("The certificate is invalid")) {
-                        isValid = false;
-                    } else {
-                        String message_permission = in.readLine();
-                        System.out.println("Your permission on the server is:" + message_permission);
-                        List<StudentInfo> ReceivedMarksList = (List<StudentInfo>) objectInputStream.readObject();
-                        StudentMarks studentMarks1 = new StudentMarks();
-                        System.out.println("List of marks");
-                        studentMarks1.getStudentsWithMarks(ReceivedMarksList);
-                    }
-
-                }
                 if (isValid == true) {
                     PrivateKey privateKey = PrettyGoodPrivacy.readPrivateKeyFromFile(privateKeyPath);
                     String PrivateKeyAsString = PrettyGoodPrivacy.privateKeyToString(privateKey);
@@ -247,11 +231,8 @@ public class TCPClient {
                         System.out.println("received Message : " + AsymmetricEncryption.decrypt(ok, sessionkey));
                     }
 
-                    if (clientMessage.equals("1")) {
-                        if (type == 2) {
-
-                            sendCSR(id_number, username, PS, publicKeyPath, privateKeyPath, out);
-                            out.println("");
+                    if (clientMessage.equals("1") && type==2) {
+                            sendCSR(id_number, username, PS,address_pro,phone_number,mobile_number, publicKeyPath, privateKeyPath, out);
                             String ok1 = in.readLine();
                             System.out.println("Server response: " + ok1);
                             String equation = in.readLine();
@@ -307,51 +288,12 @@ public class TCPClient {
                         }
 
 
-                    }
-                    if (clientMessage.equals("2")) {
-                        if (type == 2) {
-                            sendCSR(id_number, username, PS, publicKeyPath, privateKeyPath, out);
-                            out.println("");
-                            String ok1 = in.readLine();
-                            System.out.println("Server response: " + ok1);
-                            String equation = in.readLine();
-                            System.out.println(equation);
-                            System.out.print("Enter your solution for x: ");
-                            String userSolution = String.valueOf(scanner.nextInt());
-                            out.println(userSolution);
-                            String isCorrect = in.readLine();
-                            if (isCorrect.equals("true")) {
-                                String client_certificate = in.readLine();
-                                String Signature_sever = in.readLine();
-                                System.out.println("digital_certificate\n" + client_certificate);
-                                byte[] decodedBytes = Base64.getDecoder().decode(client_certificate);
-                                CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
-                                X509Certificate certificate = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(decodedBytes));
-                                System.out.println("certificate" + certificate);
-                                System.out.println(DCA.verify(client_certificate, Signature_sever, serverPublicKey));
-                                if (DCA.verify(client_certificate, Signature_sever, serverPublicKey)) {
-                                    System.out.println("The digital certificate is valid");
-                                    System.out.println("Enter path to save client_certificate");
-                                    String path = scanner.next();
-                                    String certificate_path = path + "\\client_certificate.cer";
-                                    System.out.println(certificate_path);
-                                    DCA.saveCertificate(certificate_path, certificate);
-                                } else {
-                                    System.out.println("The certificate was not saved because it is invalid");
-                                }
-
-                            } else {
-                                String error = in.readLine();
-                                System.out.println("Server response: " + error);
-                            }
-
 
                         }
-                    }
-                }
+
+
             }
         } catch (IOException e) {
-            // معالجة الاستثناء
         } catch (InvalidAlgorithmParameterException e) {
             throw new RuntimeException(e);
         } catch (SQLException e) {
@@ -377,7 +319,6 @@ public class TCPClient {
                 try {
                     socket.close();
                 } catch (IOException e) {
-                    // معالجة الاستثناء
                 }
             }
         }
@@ -397,32 +338,21 @@ public class TCPClient {
             objectOutputStream.flush();
             System.out.println("sinature List sent to the server.");
         }}
-    private static void sendCSR(int id_number,String name,String passwordd,String publickeypath,String privatekeypath,PrintWriter out) throws Exception{
+    private static void sendCSR(int id_number,String name,String passwordd,String address,int phone_number,int mobile_number,String publickeypath,String privatekeypath,PrintWriter out) throws Exception{
         System.out.println("Now, send CSR to sever : ");
         try {
             PublicKey publicKey= PrettyGoodPrivacy.readPublicKeyFromFile(publickeypath);
             PrivateKey privateKey= PrettyGoodPrivacy.readPrivateKeyFromFile(privatekeypath);
             KeyPair keyPair = CSRGenerator.createKeyPairFromKeyBytes(privateKey,publicKey);
-            String client_info;
-            if(StudentDaoImpl.isStudent(username)){
-                StudentDao studentDao = new StudentDaoImpl();
-                client_info=studentDao.get_info(username);
-            }
-            else {
-                ProfessorDao professorDao =new ProfessorDaoImpl();
-                client_info = professorDao.get_info(username);
-            }
-            String[] parts = client_info.split(",");
-            String address = parts[0].trim().replace("Address:", "");
-            String phoneNumber = parts[1].trim().replace("Phone Number:", "");
-            String mobileNumber = parts[2].trim().replace("Mobile Number:", "");
+            String publickeyString = PrettyGoodPrivacy.convertPublicKeyToString(publicKey);
+            String sign = DSA.sign(publickeyString,privateKey);
 
             String Name = name;
             String Id_number = String.valueOf(id_number);
             String password = passwordd;
             String pro_address = address;
-            String pro_phoneNumber = phoneNumber;
-            String pro_mobileNumber = mobileNumber;
+            String pro_phoneNumber = String.valueOf(phone_number);
+            String pro_mobileNumber = String.valueOf(mobile_number);
 
             PKCS10CertificationRequest csr = CSRGenerator.generateCSR(
                     keyPair, Name, Id_number, password, pro_address, pro_phoneNumber, pro_mobileNumber);
@@ -430,6 +360,8 @@ public class TCPClient {
 
             String csrPEM = CSRGenerator.convertToPEM(csr);
             out.println(csrPEM);
+            out.println("");
+            out.println(sign);
 
 
 

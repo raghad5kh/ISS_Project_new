@@ -12,7 +12,6 @@ public class commonDetails {
     public  void signin_processCommonStudentDetails(PrintWriter out, Scanner scanner) {
 
         StudentDao studentDao = new StudentDaoImpl();
-        PasswordHashing passwordHashing = new PasswordHashing();
         int id_number;
         String name;
         String password;
@@ -39,10 +38,8 @@ public class commonDetails {
 
         System.out.println("Enter your password");
         password = scanner.next();
-        String hashedPassword = passwordHashing.hashPassword(password);
         System.out.println("Your password: " + password);
-        System.out.println("hashedPassword: " + hashedPassword);
-        out.println(hashedPassword);
+        out.println(password);
         TCPClient.PS=password;
 //        getClientDetails(out,clientIPAddress,clientPortNumber);
         if(studentDao.exist(id_number)){
@@ -53,7 +50,7 @@ public class commonDetails {
 
     public  void signin_processCommonProfessorDetails(PrintWriter out, Scanner scanner) {
         ProfessorDao professorDao = new ProfessorDaoImpl();
-        PasswordHashing passwordHashing = new PasswordHashing();
+
 
         int id_number;
         String name;
@@ -80,10 +77,8 @@ public class commonDetails {
         TCPClient.username=name;
         System.out.println("Enter your password");
         password = scanner.next();
-        String hashedPassword = passwordHashing.hashPassword(password);
         System.out.println("Your password: " + password);
-        System.out.println("hashedPassword: " + hashedPassword);
-        out.println(hashedPassword);
+        out.println(password);
         TCPClient.PS=password;
 //        getClientDetails(out,clientIPAddress,clientPortNumber);
        if( professorDao.exist(id_number)) {
@@ -102,35 +97,27 @@ public class commonDetails {
         String password;
         StudentDao studentDao = new StudentDaoImpl();
         ProfessorDao professorDao = new ProfessorDaoImpl();
-        PasswordHashing passwordHashing = new PasswordHashing();
-//        System.out.println("Enter your IP Address");
-//        String ip_address = scanner.next();
-//        System.out.println("Your ip address: " + ip_address);
-//        out.println(ip_address);
-//        TCPClient.clientIPAddress=ip_address;
-//        System.out.println("Enter your port number");
-//        int port_number = Integer.parseInt(scanner.next());
-//        System.out.println("Your port number: " + port_number);
-//        out.println(port_number);
-//        TCPClient.clientPortNumber=port_number;
         System.out.println("Enter your name");
         name = scanner.next();
         System.out.println("Your name: " + name);
         out.println(name);
         TCPClient.username=name;
-
         System.out.println("Enter your password");
         password = scanner.next();
-
-        String hashedPassword = passwordHashing.hashPassword(password);
         System.out.println("Your password: " + password);
-        System.out.println("hashedPassword: " + hashedPassword);
-        out.println(hashedPassword);
+        out.println(password);
 //        getClientDetails(out,clientIPAddress,clientPortNumber);
-        if(studentDao.exist_account(name,password)|| professorDao.exist_account(name,password)){
+        String passwordFromDB_stu = studentDao.get_password(name);
+        String passwordFromDB_pro = professorDao.get_password(name);
+        PasswordHashing passwordHashing = new PasswordHashing();
+        boolean check_student =  passwordHashing.checkPassword(password,passwordFromDB_stu);
+        boolean check_professor =  passwordHashing.checkPassword(password,passwordFromDB_pro);
+        if((studentDao.exist_account(name)&& check_student)|| (professorDao.exist_account(name)&&check_professor)){
         TCPClient.isEntered=true;}
         out.flush();
     }
+
+
 
 
 }

@@ -12,7 +12,7 @@ public interface ProfessorDao {
      void updatePublicKey(String username,String publicKey);
      String get_publicKey(String  username);
 
-    boolean exist_account(String username,String password);
+    boolean exist_account(String username);
 
     String get_national_number(int id_number);
     int get_id(String username);
@@ -25,7 +25,7 @@ public interface ProfessorDao {
     int get_numberYear(int id_number);
     List<StudentInfo> get_marks(String nameTable);
     String get_nameTable(String permission );
-
+    String get_password(String username);
 
 
 }

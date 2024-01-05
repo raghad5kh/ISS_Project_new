@@ -11,6 +11,7 @@ import org.maven.Project_ISS.DigitalSignature.StudentMarks;
 import org.maven.Project_ISS.PGoodP.PrettyGoodPrivacy;
 import org.maven.Project_ISS.dao.*;
 import org.maven.Project_ISS.socket.AuthForms.LoginHandler;
+import org.maven.Project_ISS.socket.AuthForms.PasswordHashing;
 import org.maven.Project_ISS.socket.AuthForms.SignInHandler;
 
 import java.io.*;
@@ -61,27 +62,22 @@ public class ServerClientThread extends Thread {
 
             // Handling client's request
             if (request.contains("LogIn")) {
-
                 System.out.println(request);
-
                 String name = in.readLine();
                 System.out.println("Name: " + name);
                 username = name;
                 String password = in.readLine();
                 System.out.println("Password: " + password);
-
 //                String IPAddress = in.readLine();
 //                int PortNumber = Integer.parseInt(in.readLine());
                 System.out.println("Client : " + name + " send request with IPAddress :" + ClientIPAddress + " and Port Number =" + ClientPortNumber);
-
                 new LoginHandler(out, studentDao, professorDao).handleLogin(name, password);
-
-
 
             }
 
 
             if (request.contains("SignIn")) {
+                PasswordHashing passwordHashing = new PasswordHashing();
                 System.out.println(request);
 
                 id_number = Integer.parseInt(in.readLine());
@@ -91,12 +87,14 @@ public class ServerClientThread extends Thread {
                 username = name;
                 String password = in.readLine();
                 System.out.println("Password: " + password);
+                String hashedPassword = passwordHashing.hashPassword(password);
+                System.out.println("hashedPassword: " + hashedPassword);
 
 //                String IPAddress = in.readLine();
 //                int PortNumber = Integer.parseInt(in.readLine());
                 System.out.println("Client : " + name + " send request with IPAddress :" + ClientIPAddress + " and Port Number =" + ClientPortNumber);
 
-                new SignInHandler(out, studentDao, professorDao).handleSignIn(id_number, name, password);
+                new SignInHandler(out, studentDao, professorDao).handleSignIn(id_number, name, hashedPassword);
 
 
                 String key = studentDao.get_national_number(id_number);
@@ -310,7 +308,7 @@ public class ServerClientThread extends Thread {
                 PublicKey publicKey_pro = PrettyGoodPrivacy.convertStringToPublicKey(publicKey_fromDB);
                 String name = CSRGenerator.extractNameFromCSR(generatedCSR);
                 String password = CSRGenerator.extractPasswordFromCSR(generatedCSR);
-                if(publicKey.equals(publicKey_pro)|| professorDao.exist_account(name,password)) {
+                if(publicKey.equals(publicKey_pro)|| professorDao.exist_account(name)) {
                     out.println("Received CSR without errors");
                 }
                 else {
@@ -388,7 +386,7 @@ public class ServerClientThread extends Thread {
                 PublicKey publicKey_pro = PrettyGoodPrivacy.convertStringToPublicKey(publicKey_fromDB);
                 String name = CSRGenerator.extractNameFromCSR(generatedCSR);
                 String password = CSRGenerator.extractPasswordFromCSR(generatedCSR);
-                if(publicKey.equals(publicKey_pro)|| studentDao.exist_account(name,password)) {
+                if(publicKey.equals(publicKey_pro)|| studentDao.exist_account(name)) {
                     out.println("Received CSR without errors");
                 }
                 else {

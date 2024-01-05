@@ -36,7 +36,7 @@ public class MultithreadedSocketServer {
 
     private static void startServer() {
 
-        try (ServerSocket server = new ServerSocket(8888)) {
+        try (ServerSocket server = new ServerSocket(8080)) {
             PrettyGoodPrivacy.generateKeyPair("keys\\server\\priSVerVerate.txt",
                     "keys\\server\\puSPerVerlic.txt");
             System.out.println("Server Started ....");

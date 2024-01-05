@@ -24,17 +24,22 @@ public class LoginHandler {
         String isLogged;
         System.out.println("Client logged in: " + name);
 
-        boolean isStudentExist = studentDao.exist_account(name,password);
-        boolean isProfExist = professorDao.exist_account(name,password);
+        boolean isStudentExist = studentDao.exist_account(name);
+        boolean isProfExist = professorDao.exist_account(name);
+        String passwordFromDB_stu = studentDao.get_password(name);
+        String passwordFromDB_pro = professorDao.get_password(name);
+        System.out.println(passwordFromDB_pro);
+        PasswordHashing passwordHashing = new PasswordHashing();
+        boolean check_student =  passwordHashing.checkPassword(password,passwordFromDB_stu);
+        boolean check_professor =  passwordHashing.checkPassword(password,passwordFromDB_pro);
 
-        if (isStudentExist) {
+        if (isStudentExist && check_student ) {
             ServerClientThread.client_type=2;
             TCPClient.isEntered=true;
             isLogged="true";
 //            out.println(isLogged);
-            out.println("Welcome to our System, " + name);
-        }
-        else if(isProfExist){
+            out.println("Welcome to our System, " + name);}
+        else if(isProfExist && check_professor){
             TCPClient.isEntered=true;
             isLogged="true";
             ServerClientThread.client_type=1;

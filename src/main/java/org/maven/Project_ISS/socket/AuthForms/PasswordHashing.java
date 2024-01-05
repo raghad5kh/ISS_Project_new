@@ -11,6 +11,9 @@ public class PasswordHashing {
 
     public  boolean checkPassword(String candidate, String hashedPassword) {
         // Check if the entered password matches the stored hashed password
+        if(hashedPassword==null){
+            return false;
+        }
         return BCrypt.checkpw(candidate, hashedPassword);
     }
 

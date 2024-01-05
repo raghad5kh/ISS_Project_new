@@ -111,15 +111,14 @@ public class StudentDaoImpl implements StudentDao {
     }
 
     @Override
-    public boolean exist_account(String username, String password) {
+    public boolean exist_account(String username) {
         Connection con = DBConnection.getConnection();
         if (con == null) {
             return false;
         }
-        String query = "SELECT * FROM students WHERE username= ? AND password=?;";
+        String query = "SELECT * FROM students WHERE username= ? ;";
         try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
             preparedStatement.setString(1, username);
-            preparedStatement.setString(2, password);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
                 return true;
@@ -429,6 +428,31 @@ public class StudentDaoImpl implements StudentDao {
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (resultSet.next()) {
                         String  nameTable = resultSet.getString("nameTable");
+                        return nameTable;
+                    } else return null;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public String get_password(String username) {
+        try (Connection con = DBConnection.getConnection()) {
+            if (con == null) {
+                return null;
+            }
+            String query = "SELECT password FROM students WHERE username = ?;";
+            try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
+                preparedStatement.setString(1, username);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        String  nameTable = resultSet.getString("password");
                         return nameTable;
                     } else return null;
                 }

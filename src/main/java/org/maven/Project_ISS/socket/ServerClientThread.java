@@ -1,8 +1,6 @@
 package org.maven.Project_ISS.socket;
 
-import org.maven.Project_ISS.AES.AsymmetricEncryption;
-//import org.maven.Project_ISS.DigitalSignature.DSA;
-//import org.maven.Project_ISS.DigitalSignature.DigitalSignatureExample;
+import org.maven.Project_ISS.AES.SymmetricEncryption;
 import org.maven.Project_ISS.CSR.CSRGenerator;
 import org.maven.Project_ISS.DCA.DCA;
 import org.maven.Project_ISS.DigitalSignature.DSA;
@@ -13,10 +11,8 @@ import org.maven.Project_ISS.dao.*;
 import org.maven.Project_ISS.socket.AuthForms.LoginHandler;
 import org.maven.Project_ISS.socket.AuthForms.PasswordHashing;
 import org.maven.Project_ISS.socket.AuthForms.SignInHandler;
-
 import java.io.*;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -93,24 +89,22 @@ public class ServerClientThread extends Thread {
 
                 new SignInHandler(out, studentDao, professorDao).handleSignIn(id_number, name, hashedPassword);
 
-
+///--------------------Level 2
                 String key = studentDao.get_national_number(id_number);
                 if (key == null) {
                     key = professorDao.get_national_number(id_number);
                 }
                 String address = in.readLine();
-
-
                 System.out.println("address: " + address);
-                String address_after_decrypt = AsymmetricEncryption.decrypt(address, key);
+                String address_after_decrypt = SymmetricEncryption.decrypt(address, key);
                 System.out.println("address_after_decrypt:"+address_after_decrypt);
                 String phone_number = in.readLine();
                 System.out.println("phone_number: " + phone_number);
-                int phone_number_after_decrypt = Integer.parseInt(AsymmetricEncryption.decrypt(phone_number, key));
+                int phone_number_after_decrypt = Integer.parseInt(SymmetricEncryption.decrypt(phone_number, key));
                 System.out.println("phone_number_after_decrypt:"+phone_number_after_decrypt);
                 String mobile_number = in.readLine();
                 System.out.println("mobile_number: " + mobile_number);
-                int mobile_number_after_decrypt = Integer.parseInt(AsymmetricEncryption.decrypt(mobile_number, key));
+                int mobile_number_after_decrypt = Integer.parseInt(SymmetricEncryption.decrypt(mobile_number, key));
                 System.out.println("mobile_number_after_decrypt:"+mobile_number_after_decrypt);
                 int id = studentDao.get_id(name);
                 if (id == 0) {
@@ -122,11 +116,16 @@ public class ServerClientThread extends Thread {
                     studentDao.update(student);
                 }
                 String message = "Dear " + username + ",your information has been received";
-                String message_after = AsymmetricEncryption.encrypt(message, key);
+                String message_after = SymmetricEncryption.encrypt(message, key);
                 System.out.println("done information : " + message);
                 out.println(message_after);
 //                out.flush();
             }
+            ///--------------------End of Level 2
+
+
+
+            ///--------------------Level 3
             // handshake
             PublicKey clientPublicKey = performHandshake(in, out);
 
@@ -140,7 +139,7 @@ public class ServerClientThread extends Thread {
 
             //send ok responce
             String serverMessage = "The session key has been received";
-            serverMessage = AsymmetricEncryption.encrypt(serverMessage, sessionkey);
+            serverMessage = SymmetricEncryption.encrypt(serverMessage, sessionkey);
             out.println(serverMessage);
 
             if(client_type==1 && request.contains("LogIn")){
@@ -214,13 +213,13 @@ public class ServerClientThread extends Thread {
                 studentMarks.getStudentsWithMarks(DecodedMarksList);
                 System.out.println(sessionkey);
                 byte[] receivedSignatureByteList =(byte[]) objectInputStream.readObject();//3) signature byte arr decrypted
-                byte[] receivedSignatureDecoded=  AsymmetricEncryption.decryptByteList(receivedSignatureByteList,sessionkey);
+                byte[] receivedSignatureDecoded=  SymmetricEncryption.decryptByteList(receivedSignatureByteList,sessionkey);
                 String receivedSignatureBase64 = Base64.getEncoder().encodeToString(receivedSignatureByteList);
                 //verification of signature
                 dsa.verifySignature(serializedMatrixFrimClient,receivedSignatureDecoded,publicKey);
                 if ( dsa.verifySignature(serializedMatrixFrimClient,receivedSignatureDecoded,publicKey)) {
                     System.out.println("Professor Signature is VALID!.");
-                    String EncryptedResponse= AsymmetricEncryption.encrypt(receivedMessage,sessionkey);
+                    String EncryptedResponse= SymmetricEncryption.encrypt(receivedMessage,sessionkey);
                     out.println(EncryptedResponse);
                 } else {
                     System.err.println("It is not possible to validate the signature.");
@@ -245,13 +244,13 @@ public class ServerClientThread extends Thread {
                 List<String> projectsListEncoded = (List<String>) objectInputStream.readObject();
                 List<String> projectList = new ArrayList<>();
                 for (int i = 0; i < projectsListEncoded.size(); i++) {
-                    String project = AsymmetricEncryption.decrypt(projectsListEncoded.get(i), sessionkey);
+                    String project = SymmetricEncryption.decrypt(projectsListEncoded.get(i), sessionkey);
                     projectList.add(project);
                     System.out.println("Project number " + (i + 1) + " : " + projectsListEncoded.get(i));
                     System.out.println("Project number " + (i + 1) + " : " + project);
                 }
                 String receivedMessage = "Dear student , " + username + " , your project has been received";
-                out.println(AsymmetricEncryption.encrypt(receivedMessage, sessionkey));
+                out.println(SymmetricEncryption.encrypt(receivedMessage, sessionkey));
                 System.out.println("receivedMessage : " + receivedMessage);
             }
 

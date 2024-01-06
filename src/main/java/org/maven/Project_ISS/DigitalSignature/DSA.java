@@ -45,13 +45,6 @@ public class DSA {
         byte[] signatureBytes = Base64.getDecoder().decode(signature);
         return verifier.verify(signatureBytes);
     }
-    public static byte[] signMessage(String message, PrivateKey privateKey) throws Exception {
-        byte[] messageBytes = message.getBytes("UTF-8");
-        Signature signature = Signature.getInstance("SHA256withRSA");
-        signature.initSign(privateKey);
-        signature.update(messageBytes);
-        return signature.sign();
-    }
 
 }
 

@@ -2,37 +2,28 @@
 package org.maven.Project_ISS.socket;
 
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
-import org.maven.Project_ISS.AES.AsymmetricEncryption;
+import org.maven.Project_ISS.AES.SymmetricEncryption;
 import org.maven.Project_ISS.CSR.CSRGenerator;
 import org.maven.Project_ISS.DigitalSignature.*;
-//import org.maven.Project_ISS.DigitalSignature.DigitalSignatureExample;
 import org.maven.Project_ISS.DigitalSignature.StudentInfo;
 import org.maven.Project_ISS.PGoodP.PrettyGoodPrivacy;
-import org.maven.Project_ISS.dao.ProfessorDao;
 import org.maven.Project_ISS.dao.ProfessorDaoImpl;
-import org.maven.Project_ISS.dao.StudentDao;
 import org.maven.Project_ISS.dao.StudentDaoImpl;
 import org.maven.Project_ISS.socket.ClientComponents.ProfessorClient;
 import org.maven.Project_ISS.socket.ClientComponents.StudentClient;
 import org.maven.Project_ISS.socket.ClientComponents.UserInfo;
 import org.maven.Project_ISS.socket.ClientComponents.commonDetails;
-import org.bouncycastle.pkcs.PKCS10CertificationRequest;
-import org.maven.Project_ISS.AES.AsymmetricEncryption;
 import org.maven.Project_ISS.DCA.DCA;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -130,16 +121,20 @@ public class TCPClient {
 
                     String key;
                     if (clientMessage.equals("1")) {
-                        key = AsymmetricEncryption.readNational_numberFromFile("national_numbers\\client\\Professor\\national_number_" + id_number + ".txt");
+                        key = SymmetricEncryption.readNational_numberFromFile("national_numbers\\client\\Professor\\national_number_" + id_number + ".txt");
                     } else {
-                        key = AsymmetricEncryption.readNational_numberFromFile("national_numbers\\client\\Student\\national_number_" + id_number + ".txt");
+                        key = SymmetricEncryption.readNational_numberFromFile("national_numbers\\client\\Student\\national_number_" + id_number + ".txt");
                     }
                     national_number = key;
-                    String serverMessage3_after_decrypt = AsymmetricEncryption.decrypt(serverMessage3, key);
+                    String serverMessage3_after_decrypt = SymmetricEncryption.decrypt(serverMessage3, key);
                     System.out.println("Server response: " + serverMessage3);
                     System.out.println("Server response after decrypt: " + serverMessage3_after_decrypt);
                     System.out.println("--start generate kesy --");
+                    //----------------------------------------End level 1&2
 
+
+
+                    //-----------------------------Level 3
                     // generate pair key
                     publicKeyPath = "keys\\client\\pu" + id_number + "PL" + key + "ic.txt";
                     privateKeyPath = "keys\\client\\pri" + id_number + "V" + key + "ate.txt";
@@ -162,7 +157,7 @@ public class TCPClient {
                 PublicKey serverPublicKey = performHandshake(publicKeyPath, in, out);
 
                 // generate session key and send it
-                String sessionkey = AsymmetricEncryption.generateKey();
+                String sessionkey = SymmetricEncryption.generateKey();
                 sessionKey = sessionkey;
                 System.out.println("sessionkey : " + sessionkey);
 
@@ -170,7 +165,7 @@ public class TCPClient {
                 out.println(sessionkeyEncrypte);
                 //receive ok message
                 String okresponce = in.readLine();
-                String okresponceAfter = AsymmetricEncryption.decrypt(okresponce, sessionkey);
+                String okresponceAfter = SymmetricEncryption.decrypt(okresponce, sessionkey);
                 System.out.println("ok responce : " + okresponceAfter);
                 if (clientMessage.equals("1") && type == 1) {
                     String message1 = in.readLine();
@@ -204,18 +199,21 @@ public class TCPClient {
                     String PrivateKeyAsString = PrettyGoodPrivacy.privateKeyToString(privateKey);
                     PublicKey publicKey = PrettyGoodPrivacy.readPublicKeyFromFile(publicKeyPath);
                     System.out.println("publicKey" + publicKey);
+
+
+
                     //---------------Question 4-------------
                     if (clientMessage.equals("1")) {
                         List<StudentInfo> studentsWithMarks = studentMarks.EnterMarks();
                         byte[] serializedMatrix = studentMarks.convertListToBytes(studentsWithMarks);
                         byte[] signature = dsa.signMessage(serializedMatrix, privateKey);
                         System.out.println("Client publicKey =" + "\t" + publicKey);
-                        byte[] signatureEncrypted = AsymmetricEncryption.encryptByteList(signature, sessionkey);
+                        byte[] signatureEncrypted = SymmetricEncryption.encryptByteList(signature, sessionkey);
                         SendStudentsMarks(objectOutputStream, studentsWithMarks);
                         SignaturByteList(objectOutputStream, serializedMatrix);
                         SignaturByteList(objectOutputStream, signatureEncrypted);
                         String ok1 = in.readLine();
-                        String DecryptedResponse = AsymmetricEncryption.decrypt(ok1, sessionkey);
+                        String DecryptedResponse = SymmetricEncryption.decrypt(ok1, sessionkey);
                         System.out.println("Server response: " + DecryptedResponse);
                         System.out.print("Enter the directory path to save server response: ");
                         String directoryPath = scanner.next();
@@ -228,7 +226,7 @@ public class TCPClient {
                         sendList(objectOutputStream);
                         //recieve ok message
                         String ok = in.readLine();
-                        System.out.println("received Message : " + AsymmetricEncryption.decrypt(ok, sessionkey));
+                        System.out.println("received Message : " + SymmetricEncryption.decrypt(ok, sessionkey));
                     }
 
                     if (clientMessage.equals("1") && type==2) {
@@ -382,7 +380,7 @@ public class TCPClient {
         for (int i = 0; i < n; i++) {
             System.out.println("Enter your project number " + (i + 1) + " : ");
             String project = scanner.nextLine();
-            projectsList.add(AsymmetricEncryption.encrypt(project, sessionKey));
+            projectsList.add(SymmetricEncryption.encrypt(project, sessionKey));
         }
         // Send the List to the server
         objectOutputStream.writeObject(projectsList);
@@ -402,11 +400,9 @@ public class TCPClient {
         switch (clientMessage) {
             case "1":
                 professorClient.processProfessor(answer, out,in, scanner, clientIPAddress, clientPortNumber);
-//                processProfessor(out, scanner);
                 break;
             case "2":
                 studentClient.processStudent(out, scanner, answer, clientIPAddress, clientPortNumber);
-//                processStudent(out, scanner);
                 break;
             default:
                 System.out.println("Unexpected answer!");
